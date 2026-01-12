@@ -1,0 +1,255 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import NetworkGraph from '~/components/People/NetworkGraph.vue'
+import MoodHeatmap from '~/components/People/MoodHeatmap.vue'
+import { useEntriesStore } from '~/stores/entries'
+import { getAvatarUrl } from '~/utils/avatar'
+import type { Person } from '~/types'
+
+const entriesStore = useEntriesStore()
+
+// 필터 옵션
+const filterOptions = [
+  { value: 7, label: '7일' },
+  { value: 30, label: '30일' },
+  { value: 90, label: '90일' },
+  { value: 0, label: '전체' },
+]
+const selectedFilter = ref(0) // 0 = 전체
+
+// 모든 entries 가져오기
+const allEntries = computed(() => {
+  return entriesStore.listEntries()
+})
+
+// 필터링된 entries
+const filteredEntries = computed(() => {
+  if (selectedFilter.value === 0) {
+    return allEntries.value
+  }
+  
+  const cutoffDate = new Date()
+  cutoffDate.setDate(cutoffDate.getDate() - selectedFilter.value)
+  const cutoffStr = cutoffDate.toISOString().split('T')[0] || ''
+  
+  return allEntries.value.filter(entry => entry.date >= cutoffStr)
+})
+
+// 사람 이름 추출 헬퍼
+const getPersonName = (person: Person | string): string => {
+  return typeof person === 'string' ? person : person.name
+}
+
+// 가장 자주 만난 사람 Top 5
+const topPeople = computed(() => {
+  const counts = new Map<string, number>()
+  
+  allEntries.value.forEach(entry => {
+    entry.people.forEach(person => {
+      const name = getPersonName(person)
+      counts.set(name, (counts.get(name) || 0) + 1)
+    })
+  })
+  
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }))
+})
+
+// 최근 30일 만난 사람
+const recentPeople = computed(() => {
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0] || ''
+  
+  const counts = new Map<string, { count: number; lastDate: string }>()
+  
+  allEntries.value.forEach(entry => {
+    if (entry.date >= thirtyDaysAgoStr) {
+      entry.people.forEach(person => {
+        const name = getPersonName(person)
+        const existing = counts.get(name)
+        if (!existing || entry.date > existing.lastDate) {
+          counts.set(name, { 
+            count: (existing?.count || 0) + 1, 
+            lastDate: entry.date 
+          })
+        } else {
+          counts.set(name, { 
+            ...existing, 
+            count: existing.count + 1 
+          })
+        }
+      })
+    }
+  })
+  
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([name, data]) => ({ name, ...data }))
+})
+
+// 이번 주 새로 만난 사람
+const newPeopleThisWeek = computed(() => {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  const oneWeekAgoStr = oneWeekAgo.toISOString().split('T')[0] || ''
+  
+  const allPeopleBefore = new Set<string>()
+  const newPeople = new Set<string>()
+  
+  allEntries.value.forEach(entry => {
+    entry.people.forEach(person => {
+      const name = getPersonName(person)
+      if (entry.date < oneWeekAgoStr) {
+        allPeopleBefore.add(name)
+      }
+    })
+  })
+  
+  allEntries.value.forEach(entry => {
+    if (entry.date >= oneWeekAgoStr) {
+      entry.people.forEach(person => {
+        const name = getPersonName(person)
+        if (!allPeopleBefore.has(name)) {
+          newPeople.add(name)
+        }
+      })
+    }
+  })
+  
+  return Array.from(newPeople)
+})
+</script>
+
+<template>
+  <div class="max-w-5xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold dark:text-white mb-6">👥 관계 맵</h1>
+    
+    <!-- 통계 카드들 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <!-- 가장 자주 만난 사람 Top 5 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">🏆 가장 자주 만난 사람</h3>
+        <div class="space-y-2">
+          <div
+            v-for="(person, index) in topPeople"
+            :key="person.name"
+            class="flex items-center gap-3"
+          >
+            <span class="text-lg">{{ index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '　' }}</span>
+            <img 
+              :src="getAvatarUrl(person.name, 'fun-emoji')"
+              :alt="person.name"
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700"
+            />
+            <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">{{ person.name }}</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ person.count }}회</span>
+          </div>
+          <p v-if="topPeople.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
+            기록이 없습니다
+          </p>
+        </div>
+      </div>
+      
+      <!-- 최근 30일 만난 사람 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">📅 최근 30일</h3>
+        <div class="space-y-2">
+          <div
+            v-for="person in recentPeople.slice(0, 5)"
+            :key="person.name"
+            class="flex items-center gap-3"
+          >
+            <img 
+              :src="getAvatarUrl(person.name, 'fun-emoji')"
+              :alt="person.name"
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700"
+            />
+            <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">{{ person.name }}</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ person.count }}회</span>
+          </div>
+          <p v-if="recentPeople.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
+            기록이 없습니다
+          </p>
+          <p v-else-if="recentPeople.length > 5" class="text-xs text-gray-400 dark:text-gray-500 text-center">
+            +{{ recentPeople.length - 5 }}명 더
+          </p>
+        </div>
+      </div>
+      
+      <!-- 이번 주 새로 만난 사람 -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">✨ 이번 주 새로운 사람</h3>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="name in newPeopleThisWeek"
+            :key="name"
+            class="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full"
+          >
+            <img 
+              :src="getAvatarUrl(name, 'fun-emoji')"
+              :alt="name"
+              class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700"
+            />
+            <span class="text-sm text-green-700 dark:text-green-400">{{ name }}</span>
+          </div>
+          <p v-if="newPeopleThisWeek.length === 0" class="text-sm text-gray-400 dark:text-gray-500 w-full text-center py-2">
+            새로운 사람 없음
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 네트워크 그래프 -->
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-semibold dark:text-white">네트워크 그래프</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            노드를 드래그하거나 줌/패닝할 수 있어요. 클릭하면 상세 기록을 볼 수 있어요.
+          </p>
+        </div>
+        
+        <!-- 기간 필터 -->
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">기간:</span>
+          <div class="flex gap-1">
+            <button
+              v-for="option in filterOptions"
+              :key="option.value"
+              @click="selectedFilter = option.value"
+              :class="[
+                'px-3 py-1 text-sm rounded-full transition-colors',
+                selectedFilter === option.value
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              ]"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 필터 결과 -->
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+        {{ filteredEntries.length }}개의 기록에서 {{ new Set(filteredEntries.flatMap(e => e.people.map(p => typeof p === 'string' ? p : p.name))).size }}명 표시 중
+      </p>
+      
+      <NetworkGraph :entries="filteredEntries" />
+    </div>
+    
+    <!-- 감정 히트맵 -->
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold dark:text-white mb-4">🎨 감정 히트맵</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        각 사람과 함께했을 때의 기분 분포를 한눈에 볼 수 있어요.
+      </p>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <MoodHeatmap :entries="filteredEntries" />
+      </div>
+    </div>
+  </div>
+</template>
