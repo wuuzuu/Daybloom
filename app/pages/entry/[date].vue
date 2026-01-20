@@ -30,6 +30,7 @@
     <EntryView
       v-if="!isEditMode"
       :entry="existingEntry"
+      :is-deleting="isDeleting"
       @edit="isEditMode = true"
       @create="isEditMode = true"
       @delete="handleDelete"
@@ -41,6 +42,7 @@
       :date="date"
       :initial-entry="entryData"
       :has-existing-entry="!!existingEntry"
+      :is-saving="isSaving"
       @save="handleSave"
       @delete="handleDelete"
     />
@@ -58,6 +60,8 @@ const entriesStore = useEntriesStore()
 
 const date = computed(() => route.params.date as string)
 const isEditMode = ref(false)
+const isSaving = ref(false)
+const isDeleting = ref(false)
 
 const queryMood = computed(() => route.query.mood as string | undefined)
 const queryText = computed(() => route.query.text as string | undefined)
@@ -132,15 +136,25 @@ const handleSave = async (data: {
   people: Array<{ name: string; feeling?: string }>
   tomorrow?: string
 }): Promise<void> => {
-  await entriesStore.upsertEntry({
-    date: date.value,
-    ...data,
-  })
-  isEditMode.value = false
+  isSaving.value = true
+  try {
+    await entriesStore.upsertEntry({
+      date: date.value,
+      ...data,
+    })
+    isEditMode.value = false
+  } finally {
+    isSaving.value = false
+  }
 }
 
 const handleDelete = async (): Promise<void> => {
-  await entriesStore.deleteEntry(date.value)
-  router.push('/')
+  isDeleting.value = true
+  try {
+    await entriesStore.deleteEntry(date.value)
+    router.push('/')
+  } finally {
+    isDeleting.value = false
+  }
 }
 </script>

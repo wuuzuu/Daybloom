@@ -58,7 +58,15 @@ export const useWeeklyStore = defineStore('weekly', {
         const weeklyNotesByWeekStart: Record<string, WeeklyNotes> = {}
         
         data.forEach((row: DBWeeklyNote) => {
+          // DB 필드 -> 앱 필드 매핑
+          // reflection (줄바꿈 문자열) -> highlights (배열)
+          // goals (배열) -> nextExperiment (첫번째 요소)
+          const highlights = row.reflection ? row.reflection.split('\n').filter(h => h.trim()) : undefined
+          const nextExperiment = row.goals?.[0] || undefined
+          
           weeklyNotesByWeekStart[row.week_start] = {
+            highlights,
+            nextExperiment,
             reflection: row.reflection || undefined,
             goals: row.goals || undefined,
           }
@@ -84,14 +92,21 @@ export const useWeeklyStore = defineStore('weekly', {
       
       const now = new Date().toISOString()
       
+      // highlights -> reflection (배열을 줄바꿈으로 연결)
+      // nextExperiment -> goals (문자열을 배열로)
+      const reflection = payload.highlights?.join('\n') || payload.reflection || null
+      const goals = payload.nextExperiment 
+        ? [payload.nextExperiment] 
+        : (payload.goals || null)
+      
       // upsert 사용 (있으면 업데이트, 없으면 삽입)
       const { error } = await (supabase as any)
         .from('weekly_notes')
         .upsert({
           user_id: user.id,
           week_start: weekStart,
-          reflection: payload.reflection || null,
-          goals: payload.goals || null,
+          reflection,
+          goals,
           updated_at: now,
         }, {
           onConflict: 'user_id,week_start',
@@ -102,7 +117,13 @@ export const useWeeklyStore = defineStore('weekly', {
         return false
       }
       
-      this.weeklyNotesByWeekStart[weekStart] = payload
+      // 로컬 상태도 업데이트
+      this.weeklyNotesByWeekStart[weekStart] = {
+        highlights: payload.highlights || (reflection ? reflection.split('\n') : undefined),
+        nextExperiment: payload.nextExperiment || (goals?.[0] ?? undefined),
+        reflection: reflection || undefined,
+        goals: goals || undefined,
+      }
       return true
     },
 

@@ -33,9 +33,14 @@
 
       <button
         @click="handleSave"
-        class="btn-primary w-full py-4 text-base"
+        :disabled="isSaving"
+        class="btn-primary w-full py-4 text-base disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        ✨ 노트 저장
+        <span v-if="isSaving" class="inline-flex items-center gap-2">
+          <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          저장 중...
+        </span>
+        <span v-else>✨ 노트 저장</span>
       </button>
     </div>
   </section>
@@ -47,6 +52,7 @@ import { ref, watch } from 'vue'
 const props = defineProps<{
   initialHighlights?: string[]
   initialNextExperiment?: string
+  isSaving?: boolean
 }>()
 
 const emit = defineEmits<{

@@ -167,15 +167,21 @@
               <div class="flex gap-3">
                 <button
                   @click="cancelLogout"
-                  class="flex-1 px-4 py-3 bg-cream-100 dark:bg-warm-700 text-warm-700 dark:text-cream-200 rounded-2xl font-medium hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors"
+                  :disabled="isLoggingOut"
+                  class="flex-1 px-4 py-3 bg-cream-100 dark:bg-warm-700 text-warm-700 dark:text-cream-200 rounded-2xl font-medium hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   취소
                 </button>
                 <button
                   @click="confirmLogout"
-                  class="flex-1 px-4 py-3 bg-red-500 text-white rounded-2xl font-medium hover:bg-red-600 transition-colors"
+                  :disabled="isLoggingOut"
+                  class="flex-1 px-4 py-3 bg-red-500 text-white rounded-2xl font-medium hover:bg-red-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  로그아웃
+                  <span v-if="isLoggingOut" class="inline-flex items-center gap-2">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    로그아웃 중...
+                  </span>
+                  <span v-else>로그아웃</span>
                 </button>
               </div>
             </div>
@@ -202,6 +208,7 @@ const { isDark, toggleDarkMode, initDarkMode } = useDarkMode()
 
 const isMobileMenuOpen = ref(false)
 const showLogoutModal = ref(false)
+const isLoggingOut = ref(false)
 const isAppLoading = ref(true) // 앱 전체 로딩 상태 (처음엔 로딩 중)
 
 const navItems = [
@@ -240,9 +247,14 @@ const handleLogout = () => {
 
 // 로그아웃 확인
 const confirmLogout = async () => {
-  await supabase.auth.signOut()
-  showLogoutModal.value = false
-  navigateTo('/login')
+  isLoggingOut.value = true
+  try {
+    await supabase.auth.signOut()
+    showLogoutModal.value = false
+    navigateTo('/login')
+  } finally {
+    isLoggingOut.value = false
+  }
 }
 
 // 로그아웃 취소

@@ -220,15 +220,21 @@
     <div class="flex gap-3 pt-2">
       <button
         type="submit"
-        class="flex-1 btn-primary py-4 text-base"
+        :disabled="isSaving"
+        class="flex-1 btn-primary py-4 text-base disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        ✨ 저장하기
+        <span v-if="isSaving" class="inline-flex items-center gap-2">
+          <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          저장 중...
+        </span>
+        <span v-else>✨ 저장하기</span>
       </button>
       <button
         v-if="hasExistingEntry"
         type="button"
+        :disabled="isSaving"
         @click="handleDelete"
-        class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-base font-medium"
+        class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       >
         삭제
       </button>
@@ -316,6 +322,7 @@ const props = defineProps<{
     tomorrow?: string
   }
   hasExistingEntry?: boolean
+  isSaving?: boolean
 }>()
 
 const emit = defineEmits<{

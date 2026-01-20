@@ -50,6 +50,7 @@
         v-else
         :initial-highlights="summary.highlights"
         :initial-next-experiment="summary.nextExperiment"
+        :is-saving="isSavingNotes"
         @save="handleSaveNotes"
       />
 
@@ -94,6 +95,7 @@ const isCurrentWeek = computed(() => selectedWeekStart.value === currentWeekRang
 
 const savedNotes = computed(() => weeklyStore.getWeeklyNotes(weekRange.value.weekStart))
 const isEditingNotes = ref(!savedNotes.value || (!savedNotes.value.highlights?.length && !savedNotes.value.nextExperiment))
+const isSavingNotes = ref(false)
 
 watch(selectedWeekStart, () => {
   const notes = weeklyStore.getWeeklyNotes(weekRange.value.weekStart)
@@ -142,10 +144,15 @@ const summary = computed<WeeklySummary | null>(() => {
 })
 
 const handleSaveNotes = async (data: { highlights: string[]; nextExperiment: string }): Promise<void> => {
-  await weeklyStore.setWeeklyNotes(weekRange.value.weekStart, {
-    highlights: data.highlights,
-    nextExperiment: data.nextExperiment,
-  })
-  isEditingNotes.value = false
+  isSavingNotes.value = true
+  try {
+    await weeklyStore.setWeeklyNotes(weekRange.value.weekStart, {
+      highlights: data.highlights,
+      nextExperiment: data.nextExperiment,
+    })
+    isEditingNotes.value = false
+  } finally {
+    isSavingNotes.value = false
+  }
 }
 </script>

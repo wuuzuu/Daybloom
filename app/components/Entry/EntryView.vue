@@ -162,15 +162,21 @@
     <div class="flex gap-3 pt-4 border-t border-cream-200 dark:border-warm-600">
       <button
         @click="$emit('edit')"
-        class="flex-1 btn-primary py-4 text-base"
+        :disabled="isDeleting"
+        class="flex-1 btn-primary py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed"
       >
         ✏️ 수정
       </button>
       <button
         @click="handleDelete"
-        class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-base font-medium"
+        :disabled="isDeleting"
+        class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-base font-medium disabled:opacity-70 disabled:cursor-not-allowed"
       >
-        삭제
+        <span v-if="isDeleting" class="inline-flex items-center gap-2">
+          <span class="w-4 h-4 border-2 border-red-400/30 border-t-red-500 rounded-full animate-spin" />
+          삭제 중...
+        </span>
+        <span v-else>삭제</span>
       </button>
     </div>
   </div>
@@ -199,6 +205,7 @@ import { formatDate } from '~/utils/date'
 
 const props = defineProps<{
   entry: Entry | undefined
+  isDeleting?: boolean
 }>()
 
 const entriesStore = useEntriesStore()
