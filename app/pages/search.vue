@@ -1,49 +1,59 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-4xl">
-    <h1 class="text-3xl font-bold mb-6 dark:text-white">검색</h1>
+  <div class="container mx-auto px-4 py-6 max-w-2xl lg:max-w-3xl">
+    <!-- Header -->
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold text-warm-800 dark:text-cream-100">🔍 검색</h1>
+    </header>
 
     <!-- 검색 입력 -->
-    <div class="mb-6">
+    <div class="card mb-6">
       <div class="relative">
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Notes, Events, People, Mood 내용을 검색하세요..."
-          class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-4 py-3 pl-12 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg placeholder-gray-400 dark:placeholder-gray-500"
+          placeholder="기록, 이벤트, 사람, 기분을 검색하세요..."
+          class="w-full bg-cream-50 dark:bg-warm-700 border border-cream-200 dark:border-warm-600 
+                 text-warm-800 dark:text-cream-100 rounded-2xl px-4 py-3 pl-12 
+                 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 
+                 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
           @input="handleSearch"
         />
-        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-warm-400 text-xl">
           🔍
         </span>
       </div>
-    </div>
 
-    <!-- 필터 옵션 -->
-    <div class="flex flex-wrap gap-2 mb-6">
-      <button
-        v-for="filter in filters"
-        :key="filter.key"
-        @click="toggleFilter(filter.key)"
-        class="px-4 py-2 rounded-full text-sm transition-colors"
-        :class="activeFilters.includes(filter.key)
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'"
-      >
-        {{ filter.label }}
-      </button>
+      <!-- 필터 옵션 -->
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button
+          v-for="filter in filters"
+          :key="filter.key"
+          @click="toggleFilter(filter.key)"
+          :class="[
+            'px-4 py-1.5 rounded-xl text-sm transition-all',
+            activeFilters.includes(filter.key)
+              ? 'bg-lavender-500 text-white'
+              : 'bg-cream-100 dark:bg-warm-600 text-warm-600 dark:text-warm-300 hover:bg-cream-200 dark:hover:bg-warm-500'
+          ]"
+        >
+          {{ filter.label }}
+        </button>
+      </div>
     </div>
 
     <!-- 검색 결과 -->
     <div v-if="searchQuery.length > 0" class="space-y-4">
-      <p class="text-gray-600 dark:text-gray-400">
+      <p class="text-sm text-warm-500 dark:text-warm-400">
         {{ searchResults.length }}개의 결과
       </p>
 
-      <div v-if="searchResults.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
-        검색 결과가 없습니다.
+      <div v-if="searchResults.length === 0" class="card text-center py-12">
+        <span class="text-4xl mb-3 block">😕</span>
+        <p class="text-warm-500 dark:text-warm-400">검색 결과가 없어요</p>
+        <p class="text-warm-400 dark:text-warm-500 text-sm mt-1">다른 키워드로 검색해보세요</p>
       </div>
 
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-3">
         <SearchResultCard
           v-for="result in searchResults"
           :key="result.entry.id"
@@ -54,9 +64,10 @@
     </div>
 
     <!-- 검색 전 상태 -->
-    <div v-else class="text-center py-12 text-gray-500 dark:text-gray-400">
-      <p class="text-6xl mb-4">🔍</p>
-      <p>검색어를 입력하세요</p>
+    <div v-else class="card text-center py-12">
+      <span class="text-5xl mb-4 block">✨</span>
+      <p class="text-warm-600 dark:text-warm-300 font-medium">무엇을 찾고 계세요?</p>
+      <p class="text-warm-400 dark:text-warm-500 text-sm mt-1">기록, 감정, 사람 등을 검색해보세요</p>
     </div>
   </div>
 </template>
@@ -74,10 +85,10 @@ const searchQuery = ref('')
 const activeFilters = ref<string[]>(['notes', 'events', 'people', 'mood'])
 
 const filters = [
-  { key: 'notes', label: 'Notes' },
-  { key: 'events', label: 'Events' },
-  { key: 'people', label: 'People' },
-  { key: 'mood', label: 'Mood' },
+  { key: 'notes', label: '📝 Notes' },
+  { key: 'events', label: '📅 Events' },
+  { key: 'people', label: '👥 People' },
+  { key: 'mood', label: '😊 Mood' },
 ]
 
 interface SearchResult {
@@ -94,13 +105,11 @@ const searchResults = computed<SearchResult[]>(() => {
 
   const query = searchQuery.value.toLowerCase().trim()
   const results: SearchResult[] = []
-
   const entries = Object.values(entriesStore.entriesByDate)
 
   for (const entry of entries) {
     const matches: SearchResult['matches'] = []
 
-    // Notes 검색
     if (activeFilters.value.includes('notes')) {
       for (const bullet of entry.bullets) {
         if (bullet.toLowerCase().includes(query)) {
@@ -113,7 +122,6 @@ const searchResults = computed<SearchResult[]>(() => {
       }
     }
 
-    // Events 검색
     if (activeFilters.value.includes('events') && entry.events) {
       for (const event of entry.events) {
         if (event.toLowerCase().includes(query)) {
@@ -126,7 +134,6 @@ const searchResults = computed<SearchResult[]>(() => {
       }
     }
 
-    // People 검색
     if (activeFilters.value.includes('people')) {
       for (const person of entry.people) {
         const personText = person.feeling 
@@ -142,7 +149,6 @@ const searchResults = computed<SearchResult[]>(() => {
       }
     }
 
-    // Mood 검색
     if (activeFilters.value.includes('mood') && entry.mood.note) {
       if (entry.mood.note.toLowerCase().includes(query)) {
         matches.push({
@@ -158,22 +164,20 @@ const searchResults = computed<SearchResult[]>(() => {
     }
   }
 
-  // 날짜 내림차순 정렬
   results.sort((a, b) => b.entry.date.localeCompare(a.entry.date))
-
   return results
 })
 
-function highlightText(text: string, query: string): string {
+const highlightText = (text: string, query: string): string => {
   const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi')
-  return text.replace(regex, '<mark class="bg-yellow-200">$1</mark>')
+  return text.replace(regex, '<mark class="bg-lavender-200 dark:bg-lavender-700 rounded px-0.5">$1</mark>')
 }
 
-function escapeRegExp(string: string): string {
+const escapeRegExp = (string: string): string => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function toggleFilter(key: string) {
+const toggleFilter = (key: string): void => {
   const index = activeFilters.value.indexOf(key)
   if (index > -1) {
     activeFilters.value.splice(index, 1)
@@ -182,12 +186,11 @@ function toggleFilter(key: string) {
   }
 }
 
-function handleSearch() {
-  // 실시간 검색 (debounce 필요시 추가)
+const handleSearch = (): void => {
+  // 실시간 검색
 }
 
-function goToEntry(date: string) {
+const goToEntry = (date: string): void => {
   router.push(`/entry/${date}`)
 }
 </script>
-

@@ -17,11 +17,11 @@ export function useMood() {
 
   const getMoodClass = (value: MoodValue): string => {
     const classes: Record<MoodValue, string> = {
-      great: 'bg-green-100 text-green-800',
-      good: 'bg-blue-100 text-blue-800',
-      okay: 'bg-yellow-100 text-yellow-800',
-      bad: 'bg-orange-100 text-orange-800',
-      awful: 'bg-red-100 text-red-800',
+      great: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+      good: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
+      okay: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+      bad: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+      awful: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
     }
     return classes[value]
   }

@@ -1,41 +1,41 @@
 <template>
-  <section class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-    <h2 class="text-xl font-semibold mb-4 dark:text-white">이번 주 노트</h2>
+  <section class="card">
+    <h2 class="text-lg font-semibold mb-4 text-warm-800 dark:text-cream-100">📝 이번 주 노트</h2>
     
     <div class="space-y-4">
       <!-- Highlights -->
       <div>
-        <label for="highlights" class="block text-sm font-medium mb-2 dark:text-gray-200">
-          Highlights (1~3개, 줄바꿈으로 구분)
+        <label for="highlights" class="block text-sm font-medium mb-2 text-warm-700 dark:text-cream-200">
+          ✨ Highlights (1~3개, 줄바꿈으로 구분)
         </label>
         <textarea
           id="highlights"
           v-model="highlightsText"
           rows="4"
-          class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+          class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
           placeholder="이번 주 하이라이트를 입력하세요..."
         />
       </div>
 
       <!-- Next Experiment -->
       <div>
-        <label for="nextExperiment" class="block text-sm font-medium mb-2 dark:text-gray-200">
-          Next Experiment
+        <label for="nextExperiment" class="block text-sm font-medium mb-2 text-warm-700 dark:text-cream-200">
+          🔬 Next Experiment
         </label>
         <textarea
           id="nextExperiment"
           v-model="nextExperiment"
           rows="3"
-          class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+          class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
           placeholder="다음 주 시도해볼 것을 입력하세요..."
         />
       </div>
 
       <button
         @click="handleSave"
-        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+        class="btn-primary w-full py-4 text-base"
       >
-        노트 저장
+        ✨ 노트 저장
       </button>
     </div>
   </section>

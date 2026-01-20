@@ -2,8 +2,8 @@
   <form @submit.prevent="handleSave" class="space-y-6">
     <!-- Notes -->
     <div>
-      <label class="block text-sm font-medium mb-2 dark:text-gray-200">
-        Notes (최대 10개)
+      <label class="block text-sm font-medium mb-3 text-warm-700 dark:text-cream-200">
+        📝 오늘의 기록 (최대 10개)
       </label>
       <div class="space-y-3">
         <div
@@ -14,26 +14,26 @@
           <input
             v-model="form.bullets[index]"
             type="text"
-            :placeholder="`Note ${index + 1}`"
-            class="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+            :placeholder="`${index + 1}번째 기록...`"
+            class="flex-1 border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
           />
           <button
             type="button"
             @click="removeBullet(index)"
-            class="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+            class="px-3 py-2 text-warm-500 dark:text-warm-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
           >
-            삭제
+            ✕
           </button>
         </div>
         <button
           type="button"
           @click="addBullet"
           :disabled="bulletCount >= 10"
-          class="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full border-2 border-dashed border-cream-300 dark:border-warm-600 rounded-xl px-4 py-3 text-warm-500 dark:text-warm-400 hover:border-lavender-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          + Note 추가
+          + 기록 추가
         </button>
-        <p class="text-sm text-gray-500 dark:text-gray-400" :class="{ 'text-red-500 font-medium': bulletCount > 10 }">
+        <p class="text-sm text-warm-400 dark:text-warm-500 text-right" :class="{ 'text-red-500 dark:text-red-400 font-medium': bulletCount > 10 }">
           {{ bulletCount }}/10
         </p>
       </div>
@@ -41,100 +41,146 @@
 
     <!-- Events -->
     <div>
-      <label for="events" class="block text-sm font-medium mb-2 dark:text-gray-200">
-        Events (선택)
+      <label for="events" class="block text-sm font-medium mb-3 text-warm-700 dark:text-cream-200">
+        🎉 오늘의 이벤트 (선택)
       </label>
       <textarea
         id="events"
         v-model="form.eventsText"
         rows="3"
-        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+        class="w-full border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
         placeholder="특별한 이벤트나 일정을 입력하세요..."
       />
     </div>
 
     <!-- Mood -->
     <div>
-      <label for="mood" class="block text-sm font-medium mb-2 dark:text-gray-200">
-        Mood
+      <label class="block text-sm font-medium mb-3 text-warm-700 dark:text-cream-200">
+        😊 오늘의 기분
       </label>
-      <select
-        id="mood"
-        v-model="form.mood.value"
-        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      
+      <!-- Emoji Mood Picker -->
+      <div class="flex justify-center gap-2 md:gap-3 mb-3">
+        <button
+          v-for="mood in moodOptions"
+          :key="mood.value"
+          type="button"
+          :class="[
+            'text-2xl p-2 rounded-xl transition-all duration-200',
+            form.mood.value === mood.value 
+              ? 'bg-lavender-200 dark:bg-lavender-800/60 ring-2 ring-lavender-500 dark:ring-lavender-400 scale-110 shadow-md' 
+              : 'hover:bg-cream-100 dark:hover:bg-warm-700 hover:scale-105'
+          ]"
+          :aria-label="mood.label"
+          :title="mood.label"
+          @click="handleMoodSelect(mood.value)"
+        >
+          {{ mood.emoji }}
+        </button>
+      </div>
+      
+      <!-- Selected Mood Label -->
+      <p 
+        v-if="selectedMoodLabel" 
+        class="text-center text-lavender-600 dark:text-lavender-400 font-medium text-sm mb-3"
       >
-        <option value="great">최고</option>
-        <option value="good">좋음</option>
-        <option value="okay">보통</option>
-        <option value="bad">나쁨</option>
-        <option value="awful">최악</option>
-      </select>
+        {{ selectedMoodLabel }}
+      </p>
+      
+      <!-- Mood Note -->
       <input
         v-model="form.mood.note"
         type="text"
-        placeholder="Mood 노트 (선택)"
-        class="w-full mt-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+        placeholder="기분에 대한 한마디 (선택)"
+        class="w-full border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
       />
     </div>
 
     <!-- People -->
     <div>
-      <label class="block text-sm font-medium mb-2 dark:text-gray-200">
-        People
+      <label class="block text-sm font-medium mb-3 text-warm-700 dark:text-cream-200">
+        👥 함께한 사람
       </label>
       <div class="space-y-3">
         <div
           v-for="(person, index) in form.people"
           :key="index"
-          class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2"
+          class="p-4 bg-cream-50 dark:bg-warm-800 rounded-2xl space-y-3 border border-cream-100 dark:border-warm-700"
         >
           <div class="flex gap-2">
             <div class="flex-1 relative">
               <input
                 :value="person.name"
                 type="text"
-                placeholder="이름"
+                placeholder="이름을 입력하세요"
                 @input="handlePersonInput($event, index)"
                 @focus="handlePersonFocus(index)"
                 @blur="handlePersonBlur"
-                class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                class="w-full border border-warm-300 dark:border-warm-500 bg-white dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
               />
               <!-- Autocomplete Suggestions -->
               <div
                 v-if="focusedPersonIndex === index && personSuggestions.length > 0"
-                class="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden"
+                class="absolute z-50 top-full left-0 right-0 mt-2 bg-white dark:bg-warm-700 border border-warm-300 dark:border-warm-500 rounded-xl shadow-lg overflow-hidden"
               >
                 <button
                   v-for="suggestion in personSuggestions"
                   :key="suggestion"
                   type="button"
                   @mousedown.prevent="selectSuggestion(suggestion)"
-                  class="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-lavender-50 dark:hover:bg-lavender-900/20 transition-colors"
                 >
                   <img
-                    :src="getAvatarUrl(suggestion, 'fun-emoji')"
+                    :src="getAvatarUrl(suggestion, 'lorelei')"
                     :alt="suggestion"
-                    class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-600"
+                    class="w-7 h-7 rounded-full bg-cream-100 dark:bg-warm-600"
                   />
-                  <span class="text-gray-900 dark:text-white">{{ suggestion }}</span>
+                  <span class="text-warm-700 dark:text-cream-100">{{ suggestion }}</span>
                 </button>
               </div>
             </div>
-            <select
-              v-model="person.mood"
-              class="w-24 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-              <option value="">기분</option>
-              <option value="great">😊 최고</option>
-              <option value="good">🙂 좋음</option>
-              <option value="okay">😐 보통</option>
-              <option value="bad">😕 나쁨</option>
-              <option value="awful">😢 최악</option>
-            </select>
+            <!-- Custom Mood Dropdown -->
+            <div class="relative">
+              <button
+                type="button"
+                @click="togglePersonMoodDropdown(index)"
+                class="w-14 h-12 border border-warm-300 dark:border-warm-500 bg-white dark:bg-warm-700 rounded-xl flex items-center justify-center text-xl hover:bg-cream-50 dark:hover:bg-warm-600 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 transition-all"
+                :class="person.mood ? 'ring-2 ring-lavender-400 dark:ring-lavender-500 bg-lavender-50 dark:bg-lavender-900/30' : ''"
+                :aria-label="person.mood ? getPersonMoodLabel(person.mood) : '기분 선택'"
+              >
+                <span v-if="person.mood">{{ getPersonMoodEmoji(person.mood) }}</span>
+                <span v-else class="text-warm-400 dark:text-warm-500">😶</span>
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <div
+                v-if="openPersonMoodIndex === index"
+                class="absolute z-50 top-full right-0 mt-2 bg-white dark:bg-warm-700 border border-warm-300 dark:border-warm-500 rounded-xl shadow-lg p-2"
+              >
+                <div class="flex gap-1">
+                  <button
+                    v-for="mood in personMoodOptions"
+                    :key="mood.value"
+                    type="button"
+                    @click="selectPersonMood(index, mood.value)"
+                    :class="[
+                      'text-xl p-2 rounded-lg transition-all duration-200',
+                      person.mood === mood.value 
+                        ? 'bg-lavender-200 dark:bg-lavender-800/60 ring-2 ring-lavender-500 dark:ring-lavender-400 scale-110' 
+                        : 'hover:bg-cream-100 dark:hover:bg-warm-600 hover:scale-105'
+                    ]"
+                    :aria-label="mood.label"
+                    :title="mood.label"
+                  >
+                    {{ mood.emoji }}
+                  </button>
+                </div>
+              </div>
+            </div>
             <button
               type="button"
               @click="removePerson(index)"
-              class="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors text-sm"
+              class="px-3 py-2 text-warm-400 dark:text-warm-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
             >
               ✕
             </button>
@@ -142,14 +188,14 @@
           <input
             v-model="person.feeling"
             type="text"
-            placeholder="감상/메모 (선택)"
-            class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400 text-sm"
+            placeholder="함께한 순간에 대한 메모 (선택)"
+            class="w-full border border-warm-300 dark:border-warm-500 bg-white dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 text-sm transition-all"
           />
         </div>
         <button
           type="button"
           @click="addPerson"
-          class="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          class="w-full border-2 border-dashed border-cream-300 dark:border-warm-600 rounded-xl px-4 py-3 text-warm-500 dark:text-warm-400 hover:border-lavender-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-all"
         >
           + 사람 추가
         </button>
@@ -158,31 +204,31 @@
 
     <!-- Tomorrow -->
     <div>
-      <label for="tomorrow" class="block text-sm font-medium mb-2 dark:text-gray-200">
-        Tomorrow (선택)
+      <label for="tomorrow" class="block text-sm font-medium mb-3 text-warm-700 dark:text-cream-200">
+        🌅 내일의 다짐 (선택)
       </label>
       <textarea
         id="tomorrow"
         v-model="form.tomorrow"
         rows="3"
-        class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-        placeholder="내일 계획이나 목표를 입력하세요..."
+        class="w-full border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
+        placeholder="내일의 계획이나 목표를 입력하세요..."
       />
     </div>
 
     <!-- Actions -->
-    <div class="flex gap-4">
+    <div class="flex gap-3 pt-2">
       <button
         type="submit"
-        class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+        class="flex-1 btn-primary py-4 text-base"
       >
-        저장
+        ✨ 저장하기
       </button>
       <button
         v-if="hasExistingEntry"
         type="button"
         @click="handleDelete"
-        class="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors"
+        class="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-all text-base font-medium"
       >
         삭제
       </button>
@@ -191,12 +237,74 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { Mood, MoodValue } from '~/types'
 import { useEntriesStore } from '~/stores/entries'
 import { getAvatarUrl } from '~/utils/avatar'
 
 const entriesStore = useEntriesStore()
+
+// Mood options with emojis
+const moodOptions = [
+  { value: 'great' as const, emoji: '😄', label: '최고예요!' },
+  { value: 'good' as const, emoji: '🙂', label: '좋아요' },
+  { value: 'okay' as const, emoji: '😐', label: '그냥 그래요' },
+  { value: 'bad' as const, emoji: '😔', label: '별로예요' },
+  { value: 'awful' as const, emoji: '😢', label: '힘들어요' },
+]
+
+// Person mood options (same as main mood but for people)
+const personMoodOptions = [
+  { value: 'great' as const, emoji: '😊', label: '최고' },
+  { value: 'good' as const, emoji: '🙂', label: '좋음' },
+  { value: 'okay' as const, emoji: '😐', label: '보통' },
+  { value: 'bad' as const, emoji: '😕', label: '나쁨' },
+  { value: 'awful' as const, emoji: '😢', label: '최악' },
+]
+
+// State for person mood dropdown
+const openPersonMoodIndex = ref<number | null>(null)
+
+const togglePersonMoodDropdown = (index: number): void => {
+  if (openPersonMoodIndex.value === index) {
+    openPersonMoodIndex.value = null
+  } else {
+    openPersonMoodIndex.value = index
+  }
+}
+
+const selectPersonMood = (index: number, moodValue: string): void => {
+  if (form.value.people[index]) {
+    form.value.people[index].mood = moodValue
+  }
+  openPersonMoodIndex.value = null
+}
+
+const getPersonMoodEmoji = (moodValue: string): string => {
+  const mood = personMoodOptions.find(m => m.value === moodValue)
+  return mood ? mood.emoji : '😶'
+}
+
+const getPersonMoodLabel = (moodValue: string): string => {
+  const mood = personMoodOptions.find(m => m.value === moodValue)
+  return mood ? mood.label : '기분'
+}
+
+// Click outside handler to close person mood dropdown
+const handleClickOutside = (event: MouseEvent): void => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.relative')) {
+    openPersonMoodIndex.value = null
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const props = defineProps<{
   date: string
@@ -241,6 +349,15 @@ const form = ref({
 const bulletCount = computed(() => {
   return form.value.bullets.filter((b) => b.trim().length > 0).length
 })
+
+const selectedMoodLabel = computed(() => {
+  const mood = moodOptions.find(m => m.value === form.value.mood.value)
+  return mood ? mood.label : ''
+})
+
+const handleMoodSelect = (moodValue: MoodValue): void => {
+  form.value.mood.value = moodValue
+}
 
 // 기존에 기록된 모든 사람 이름 목록 (고유)
 const allPeopleNames = computed(() => {

@@ -1,45 +1,45 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+  <div class="overflow-hidden rounded-2xl border border-cream-200 dark:border-warm-600">
     <!-- 헤더: 월 탐색 -->
-    <div class="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+    <div class="flex items-center justify-between px-4 py-3 bg-lavender-100 dark:bg-warm-700 border-b border-cream-200 dark:border-warm-600">
       <button
         @click="$emit('prev')"
-        class="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+        class="p-2 hover:bg-lavender-200 dark:hover:bg-warm-600 rounded-xl transition-colors"
       >
-        <span class="text-gray-600 dark:text-gray-300">←</span>
+        <span class="text-lavender-700 dark:text-cream-100">←</span>
       </button>
-      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+      <h2 class="text-lg font-semibold text-lavender-800 dark:text-cream-100">
         {{ year }}년 {{ monthName }}
       </h2>
       <button
         @click="$emit('next')"
         :disabled="isCurrentMonth"
-        class="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="p-2 hover:bg-lavender-200 dark:hover:bg-warm-600 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <span class="text-gray-600 dark:text-gray-300">→</span>
+        <span class="text-lavender-700 dark:text-cream-100">→</span>
       </button>
     </div>
 
     <!-- 요일 헤더 -->
-    <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-600">
+    <div class="grid grid-cols-7 border-b border-cream-200 dark:border-warm-600 bg-cream-100 dark:bg-warm-700">
       <div
         v-for="day in weekDays"
         :key="day"
-        class="py-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+        class="py-3 text-center text-sm font-medium text-warm-600 dark:text-cream-200"
       >
         {{ day }}
       </div>
     </div>
 
     <!-- 날짜 그리드 -->
-    <div class="grid grid-cols-7">
+    <div class="grid grid-cols-7 bg-cream-50 dark:bg-warm-800">
       <div
         v-for="(day, index) in calendarDays"
         :key="index"
-        class="min-h-[80px] border-b border-r border-gray-100 dark:border-gray-700 p-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        class="min-h-[80px] border-b border-r border-cream-200 dark:border-warm-600 p-2 cursor-pointer hover:bg-lavender-100 dark:hover:bg-warm-700 transition-colors"
         :class="{
-          'bg-gray-50 dark:bg-gray-800': !day.isCurrentMonth,
-          'bg-blue-50 dark:bg-blue-900/30': day.isToday,
+          'bg-cream-100/50 dark:bg-warm-700/30': !day.isCurrentMonth && !day.isToday,
+          'bg-lavender-200 dark:bg-[rgb(88,60,120)] ring-2 ring-inset ring-lavender-400 dark:ring-[rgb(192,132,252)]': day.isToday,
         }"
         @click="$emit('select', day.date)"
       >
@@ -47,9 +47,9 @@
           <span
             class="text-sm font-medium"
             :class="{
-              'text-gray-400 dark:text-gray-500': !day.isCurrentMonth,
-              'text-blue-600 dark:text-blue-400': day.isToday && day.isCurrentMonth,
-              'text-gray-900 dark:text-gray-200': !day.isToday && day.isCurrentMonth,
+              'text-warm-400 dark:text-warm-500': !day.isCurrentMonth && !day.isToday,
+              'text-lavender-700 dark:text-[rgb(216,180,254)] font-bold': day.isToday,
+              'text-warm-700 dark:text-cream-100': !day.isToday && day.isCurrentMonth,
             }"
           >
             {{ day.day }}
@@ -58,14 +58,14 @@
           <!-- 기분 표시 -->
           <span
             v-if="getEntryForDate(day.date)"
-            class="w-3 h-3 rounded-full"
+            class="w-3 h-3 rounded-full shadow-sm"
             :class="getMoodColor(getEntryForDate(day.date)?.mood.value)"
           />
         </div>
 
         <!-- 엔트리 미리보기 -->
         <div v-if="getEntryForDate(day.date)" class="mt-1">
-          <p class="text-xs text-gray-600 dark:text-gray-400 truncate">
+          <p class="text-xs text-warm-600 dark:text-cream-300 truncate">
             {{ getEntryPreview(day.date) }}
           </p>
         </div>
@@ -119,11 +119,11 @@ function getEntryPreview(date: string): string {
 function getMoodColor(mood?: MoodValue): string {
   if (!mood) return ''
   const colors: Record<MoodValue, string> = {
-    great: 'bg-green-500',
-    good: 'bg-blue-500',
-    okay: 'bg-yellow-500',
-    bad: 'bg-orange-500',
-    awful: 'bg-red-500',
+    great: 'bg-green-400',
+    good: 'bg-sky-400',
+    okay: 'bg-yellow-400',
+    bad: 'bg-orange-400',
+    awful: 'bg-red-400',
   }
   return colors[mood]
 }

@@ -1,32 +1,36 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-4xl">
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold dark:text-white">
-        {{ isCurrentWeek ? '이번 주 요약' : `${weekRange.weekStart} ~ ${weekRange.weekEnd} 요약` }}
+  <div class="container mx-auto px-4 py-6 max-w-2xl lg:max-w-3xl">
+    <!-- Header -->
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold text-warm-800 dark:text-cream-100 mb-4">
+        📊 {{ isCurrentWeek ? '이번 주 요약' : '주간 요약' }}
       </h1>
       <div class="flex items-center gap-2">
         <button
           @click="goToPreviousWeek"
-          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white transition-colors"
+          class="btn-secondary text-sm px-3 py-2"
         >
-          ← 이전 주
+          ← 이전
         </button>
+        <span class="flex-1 text-center text-sm text-warm-500 dark:text-warm-400">
+          {{ weekRange.weekStart }} ~ {{ weekRange.weekEnd }}
+        </span>
         <button
           v-if="!isCurrentWeek"
           @click="goToCurrentWeek"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          class="btn-primary text-sm px-3 py-2"
         >
           이번 주
         </button>
         <button
           @click="goToNextWeek"
           :disabled="isCurrentWeek"
-          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="btn-secondary text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          다음 주 →
+          다음 →
         </button>
       </div>
-    </div>
+    </header>
 
     <div v-if="summary" class="space-y-6">
       <!-- 기본 통계 -->
@@ -51,13 +55,15 @@
 
       <!-- 이번 주 엔트리 목록 -->
       <section>
-        <h2 class="text-xl font-semibold mb-4 dark:text-white">이번 주 엔트리</h2>
+        <h2 class="text-lg font-semibold text-warm-700 dark:text-cream-200 mb-4">이번 주 기록</h2>
         <EntryList :entries="weekEntries" />
       </section>
     </div>
 
-    <div v-else class="text-gray-500 dark:text-gray-400">
-      이번 주 데이터가 없습니다.
+    <div v-else class="card text-center py-12">
+      <span class="text-4xl mb-3 block">📭</span>
+      <p class="text-warm-500 dark:text-warm-400">이번 주 데이터가 없어요</p>
+      <p class="text-warm-400 dark:text-warm-500 text-sm mt-1">기록을 시작해보세요!</p>
     </div>
   </div>
 </template>
@@ -69,7 +75,6 @@ import { useWeeklyStore } from '~/stores/weekly'
 import { getToday, getWeekRange, getPreviousWeek, getNextWeek } from '~/utils/date'
 import { buildWeeklySummary } from '~/utils/summary'
 import type { WeeklySummary } from '~/types'
-import dayjs from 'dayjs'
 
 const route = useRoute()
 const router = useRouter()
@@ -79,44 +84,37 @@ const weeklyStore = useWeeklyStore()
 const today = getToday()
 const currentWeekRange = getWeekRange(today)
 
-// URL 쿼리에서 주 선택 (없으면 이번 주)
 const selectedWeekStart = computed(() => {
   const weekParam = route.query.week as string | undefined
-  if (weekParam) {
-    return weekParam
-  }
-  return currentWeekRange.weekStart
+  return weekParam || currentWeekRange.weekStart
 })
 
 const weekRange = computed(() => getWeekRange(selectedWeekStart.value))
 const isCurrentWeek = computed(() => selectedWeekStart.value === currentWeekRange.weekStart)
 
-// 저장된 노트가 없으면 편집 모드로 시작
 const savedNotes = computed(() => weeklyStore.getWeeklyNotes(weekRange.value.weekStart))
 const isEditingNotes = ref(!savedNotes.value || (!savedNotes.value.highlights?.length && !savedNotes.value.nextExperiment))
 
-// 주가 변경되면 편집 모드 초기화
 watch(selectedWeekStart, () => {
   const notes = weeklyStore.getWeeklyNotes(weekRange.value.weekStart)
   isEditingNotes.value = !notes || (!notes.highlights?.length && !notes.nextExperiment)
 })
 
-function goToPreviousWeek() {
+const goToPreviousWeek = (): void => {
   const prevWeek = getPreviousWeek(weekRange.value.weekStart)
   router.push({ query: { week: prevWeek } })
 }
 
-function goToNextWeek() {
+const goToNextWeek = (): void => {
   if (isCurrentWeek.value) return
   const nextWeek = getNextWeek(weekRange.value.weekStart)
   router.push({ query: { week: nextWeek } })
 }
 
-function goToCurrentWeek() {
+const goToCurrentWeek = (): void => {
   router.push({ query: {} })
 }
 
-// 이번 주 엔트리 조회
 const weekEntries = computed(() => {
   return entriesStore.listEntries({
     from: weekRange.value.weekStart,
@@ -124,12 +122,9 @@ const weekEntries = computed(() => {
   })
 })
 
-// 주간 요약 계산
 const summary = computed<WeeklySummary | null>(() => {
   const entries = weekEntries.value
-  if (entries.length === 0) {
-    return null
-  }
+  if (entries.length === 0) return null
   
   const baseSummary = buildWeeklySummary(
     entries,
@@ -137,7 +132,6 @@ const summary = computed<WeeklySummary | null>(() => {
     weekRange.value.weekEnd
   )
   
-  // 저장된 노트 추가
   const savedNotes = weeklyStore.getWeeklyNotes(weekRange.value.weekStart)
   if (savedNotes) {
     baseSummary.highlights = savedNotes.highlights
@@ -147,13 +141,11 @@ const summary = computed<WeeklySummary | null>(() => {
   return baseSummary
 })
 
-function handleSaveNotes(data: { highlights: string[]; nextExperiment: string }) {
-  weeklyStore.setWeeklyNotes(weekRange.value.weekStart, {
+const handleSaveNotes = async (data: { highlights: string[]; nextExperiment: string }): Promise<void> => {
+  await weeklyStore.setWeeklyNotes(weekRange.value.weekStart, {
     highlights: data.highlights,
     nextExperiment: data.nextExperiment,
   })
-  // 저장 후 읽기 모드로 전환
   isEditingNotes.value = false
 }
 </script>
-

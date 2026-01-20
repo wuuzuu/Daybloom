@@ -1,10 +1,24 @@
 import { defineStore } from 'pinia'
-import type { Entry } from '~/types'
-import { generateUUID } from '~/utils/uuid'
+import type { Entry, Person, MoodValue, Mood } from '~/types'
+
+interface DBEntry {
+  id: string
+  user_id: string
+  date: string
+  bullets: string[]
+  events: string[] | null
+  mood: { value: MoodValue; note?: string }
+  people: Person[]
+  tomorrow: string | null
+  created_at: string
+  updated_at: string
+}
 
 export const useEntriesStore = defineStore('entries', {
   state: () => ({
     entriesByDate: {} as Record<string, Entry>,
+    isLoading: false,
+    isInitialized: false,
   }),
 
   getters: {
@@ -51,44 +65,139 @@ export const useEntriesStore = defineStore('entries', {
 
   actions: {
     /**
-     * 엔트리 생성 또는 업데이트
+     * Supabase에서 모든 엔트리 불러오기
      */
-    upsertEntry(entry: Omit<Entry, 'id' | 'createdAt' | 'updatedAt'>): Entry {
-      const existing = this.entriesByDate[entry.date]
-      const now = Date.now()
+    async fetchEntries() {
+      const supabase = useSupabaseClient()
+      const { data: { user } } = await (supabase as any).auth.getUser()
       
-      if (existing) {
-        // 업데이트
-        const updated: Entry = {
-          ...existing,
-          ...entry,
-          updatedAt: now,
-        }
-        this.entriesByDate[entry.date] = updated
-        return updated
-      } else {
-        // 생성
-        const newEntry: Entry = {
-          ...entry,
-          id: generateUUID(),
-          createdAt: now,
-          updatedAt: now,
-        }
-        this.entriesByDate[entry.date] = newEntry
-        return newEntry
+      if (!user?.id) {
+        this.isInitialized = true
+        return
       }
+      
+      this.isLoading = true
+      
+      const { data, error } = await (supabase as any)
+        .from('entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+      
+      if (error) {
+        console.error('Failed to fetch entries:', error)
+      } else if (data) {
+        const entriesByDate: Record<string, Entry> = {}
+        
+        ;(data as unknown as DBEntry[]).forEach((row) => {
+          entriesByDate[row.date] = {
+            id: row.id,
+            date: row.date,
+            bullets: row.bullets || [],
+            events: row.events || undefined,
+            mood: row.mood as Mood,
+            people: row.people || [],
+            tomorrow: row.tomorrow || undefined,
+            createdAt: new Date(row.created_at).getTime(),
+            updatedAt: new Date(row.updated_at).getTime(),
+          }
+        })
+        
+        this.entriesByDate = entriesByDate
+      }
+      
+      this.isLoading = false
+      this.isInitialized = true
+    },
+
+    /**
+     * 엔트리 생성 또는 업데이트 (Supabase upsert 사용)
+     */
+    async upsertEntry(entry: Omit<Entry, 'id' | 'createdAt' | 'updatedAt'>): Promise<Entry | null> {
+      const supabase = useSupabaseClient()
+      
+      // Supabase auth에서 직접 사용자 정보 가져오기
+      const { data: { user } } = await (supabase as any).auth.getUser()
+      
+      if (!user?.id) {
+        console.error('No authenticated user found')
+        return null
+      }
+      
+      const now = new Date().toISOString()
+      
+      const upsertPayload = {
+        user_id: user.id,
+        date: entry.date,
+        bullets: entry.bullets,
+        events: entry.events || null,
+        mood: entry.mood,
+        people: entry.people,
+        tomorrow: entry.tomorrow || null,
+        updated_at: now,
+      }
+      
+      const { data, error } = await (supabase as any)
+        .from('entries')
+        .upsert(upsertPayload, {
+          onConflict: 'user_id,date',
+        })
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('Failed to upsert entry:', error)
+        return null
+      }
+      
+      const row = data as unknown as DBEntry
+      const savedEntry: Entry = {
+        id: row.id,
+        date: row.date,
+        bullets: row.bullets || [],
+        events: row.events || undefined,
+        mood: row.mood as Mood,
+        people: row.people || [],
+        tomorrow: row.tomorrow || undefined,
+        createdAt: new Date(row.created_at).getTime(),
+        updatedAt: new Date(row.updated_at).getTime(),
+      }
+      
+      this.entriesByDate[entry.date] = savedEntry
+      return savedEntry
     },
 
     /**
      * 엔트리 삭제
      */
-    deleteEntry(date: string): void {
+    async deleteEntry(date: string): Promise<boolean> {
+      const supabase = useSupabaseClient()
+      
+      // Supabase auth에서 직접 사용자 정보 가져오기
+      const { data: { user } } = await (supabase as any).auth.getUser()
+      
+      if (!user?.id) return false
+      
+      const existing = this.entriesByDate[date]
+      if (!existing) return false
+      
+      const { error } = await (supabase as any)
+        .from('entries')
+        .delete()
+        .eq('id', existing.id)
+        .eq('user_id', user.id)
+      
+      if (error) {
+        console.error('Failed to delete entry:', error)
+        return false
+      }
+      
       delete this.entriesByDate[date]
+      return true
     },
 
     /**
-     * 모든 엔트리 로드 (storage에서)
-     * 기존 string[] 형태의 people을 Person[]로 마이그레이션
+     * 모든 엔트리 로드 (storage에서) - 레거시 호환
      */
     hydrate(entriesByDate: Record<string, Entry>): void {
       // 마이그레이션: string[] → Person[]
@@ -97,7 +206,6 @@ export const useEntriesStore = defineStore('entries', {
         migrated[date] = {
           ...entry,
           people: entry.people.map((person) => {
-            // 이미 Person 형태면 그대로, string이면 변환
             if (typeof person === 'string') {
               return { name: person }
             }
@@ -109,4 +217,3 @@ export const useEntriesStore = defineStore('entries', {
     },
   },
 })
-

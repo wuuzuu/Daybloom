@@ -1,66 +1,73 @@
 <template>
-  <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-bold dark:text-white">캘린더</h1>
-      <button
-        v-if="!isCurrentMonth"
-        @click="goToCurrentMonth"
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        이번 달
-      </button>
-    </div>
+  <div class="container mx-auto px-4 py-6 max-w-2xl lg:max-w-3xl">
+    <!-- Header -->
+    <header class="mb-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-warm-800 dark:text-cream-100">📅 캘린더</h1>
+        <button
+          v-if="!isCurrentMonth"
+          @click="goToCurrentMonth"
+          class="btn-primary text-sm"
+        >
+          이번 달
+        </button>
+      </div>
+    </header>
 
     <!-- 범례 -->
-    <div class="flex items-center gap-4 mb-6 text-sm">
-      <span class="text-gray-600 dark:text-gray-400">기분:</span>
-      <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-green-500" />
-        <span class="text-gray-700 dark:text-gray-300">최고</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-blue-500" />
-        <span class="text-gray-700 dark:text-gray-300">좋음</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-yellow-500" />
-        <span class="text-gray-700 dark:text-gray-300">보통</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-orange-500" />
-        <span class="text-gray-700 dark:text-gray-300">나쁨</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span class="w-3 h-3 rounded-full bg-red-500" />
-        <span class="text-gray-700 dark:text-gray-300">최악</span>
+    <div class="card mb-6">
+      <div class="flex flex-wrap items-center gap-4 text-sm">
+        <span class="text-warm-500 dark:text-warm-400">기분:</span>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 rounded-full bg-green-400" />
+          <span class="text-warm-600 dark:text-warm-300">최고</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 rounded-full bg-sky-400" />
+          <span class="text-warm-600 dark:text-warm-300">좋음</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 rounded-full bg-yellow-400" />
+          <span class="text-warm-600 dark:text-warm-300">보통</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 rounded-full bg-orange-400" />
+          <span class="text-warm-600 dark:text-warm-300">나쁨</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 rounded-full bg-red-400" />
+          <span class="text-warm-600 dark:text-warm-300">최악</span>
+        </div>
       </div>
     </div>
 
     <!-- 통계 -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
-        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ monthStats.entryCount }}</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400">기록한 날</p>
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="card text-center p-4">
+        <p class="text-2xl font-bold text-lavender-500">{{ monthStats.entryCount }}</p>
+        <p class="text-xs text-warm-500 dark:text-warm-400">기록한 날</p>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
-        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ monthStats.streak }}</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400">연속 기록</p>
+      <div class="card text-center p-4">
+        <p class="text-2xl font-bold text-green-500">{{ monthStats.streak }}</p>
+        <p class="text-xs text-warm-500 dark:text-warm-400">연속 기록</p>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
-        <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ monthStats.daysInMonth - monthStats.entryCount }}</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400">빈 날</p>
+      <div class="card text-center p-4">
+        <p class="text-2xl font-bold text-warm-400">{{ monthStats.daysInMonth - monthStats.entryCount }}</p>
+        <p class="text-xs text-warm-500 dark:text-warm-400">빈 날</p>
       </div>
     </div>
 
     <!-- 캘린더 -->
-    <MonthCalendar
-      :year="currentYear"
-      :month="currentMonth"
-      :entries="entriesStore.entriesByDate"
-      @prev="goToPreviousMonth"
-      @next="goToNextMonth"
-      @select="handleDateSelect"
-    />
+    <div class="card">
+      <MonthCalendar
+        :year="currentYear"
+        :month="currentMonth"
+        :entries="entriesStore.entriesByDate"
+        @prev="goToPreviousMonth"
+        @next="goToNextMonth"
+        @select="handleDateSelect"
+      />
+    </div>
   </div>
 </template>
 
@@ -76,13 +83,12 @@ const entriesStore = useEntriesStore()
 
 const today = dayjs(getToday())
 const currentYear = ref(today.year())
-const currentMonth = ref(today.month() + 1) // 1-12
+const currentMonth = ref(today.month() + 1)
 
 const isCurrentMonth = computed(() => {
   return currentYear.value === today.year() && currentMonth.value === today.month() + 1
 })
 
-// 월별 통계
 const monthStats = computed(() => {
   const days = getCalendarDays(currentYear.value, currentMonth.value)
     .filter(d => d.isCurrentMonth)
@@ -108,7 +114,7 @@ const monthStats = computed(() => {
   }
 })
 
-function goToPreviousMonth() {
+const goToPreviousMonth = (): void => {
   if (currentMonth.value === 1) {
     currentMonth.value = 12
     currentYear.value--
@@ -117,7 +123,7 @@ function goToPreviousMonth() {
   }
 }
 
-function goToNextMonth() {
+const goToNextMonth = (): void => {
   if (isCurrentMonth.value) return
   
   if (currentMonth.value === 12) {
@@ -128,13 +134,12 @@ function goToNextMonth() {
   }
 }
 
-function goToCurrentMonth() {
+const goToCurrentMonth = (): void => {
   currentYear.value = today.year()
   currentMonth.value = today.month() + 1
 }
 
-function handleDateSelect(date: string) {
+const handleDateSelect = (date: string): void => {
   router.push(`/entry/${date}`)
 }
 </script>
-

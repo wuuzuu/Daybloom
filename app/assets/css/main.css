@@ -1,4 +1,337 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Logo typography */
+.logo-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* Button styles with direct color values */
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background-color: #9B8AC4;
+  color: white;
+  border-radius: 1rem;
+  transition: all 0.2s;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary:hover {
+  background-color: #7B68A6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background-color: #F5F1EB;
+  color: #5D5248;
+  border-radius: 1rem;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background-color: #E8E0D5;
+}
+
+/* Card styles */
+.card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(245, 241, 235, 0.5);
+}
+
+.card-hover {
+  transition: all 0.2s;
+}
+
+.card-hover:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: #E8E4F0;
+}
+
+/* Mood emoji styles */
+.mood-emoji {
+  font-size: 2.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mood-emoji:hover {
+  transform: scale(1.25);
+}
+
+.mood-emoji:active {
+  transform: scale(1.1);
+}
+
+.mood-emoji.selected {
+  transform: scale(1.25);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF8F5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4CCE5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C5B8D9;
+}
+
+/* Dark mode styles */
+.dark .card {
+  background: rgba(61, 54, 47, 0.9);
+  border-color: rgba(93, 82, 72, 0.5);
+}
+
+.dark .card-hover:hover {
+  border-color: #7B68A6;
+}
+
+.dark .btn-secondary {
+  background-color: #5D5248;
+  color: #FAF8F5;
+}
+
+.dark .btn-secondary:hover {
+  background-color: #8C7D68;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #3D362F;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #5D5248;
+}
+
+/* Timeline styles */
+.timeline {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 0.3125rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: linear-gradient(to bottom, #D4CCE5, #E8E4F0, #F5F1EB);
+  border-radius: 9999px;
+}
+
+.dark .timeline-line {
+  background: linear-gradient(to bottom, #7B68A6, #5D5248, #3D362F);
+}
+
+.timeline-item {
+  position: relative;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -1.5rem;
+  top: 2.5rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  border: 2px solid white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.dark .timeline-dot {
+  border-color: #3D362F;
+}
+
+.timeline-item:hover .timeline-dot {
+  transform: scale(1.25);
+}
+
+.timeline-dot.mood-great { background-color: #4ade80; }
+.timeline-dot.mood-good { background-color: #38bdf8; }
+.timeline-dot.mood-okay { background-color: #facc15; }
+.timeline-dot.mood-bad { background-color: #fb923c; }
+.timeline-dot.mood-awful { background-color: #f87171; }
+
+.timeline-arrow {
+  transition: color 0.2s;
+}
+
+.timeline-item:hover .timeline-arrow {
+  color: #9B8AC4;
+}
+
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 0 1rem 0.5rem;
+}
+
+@media (max-width: 767px) {
+  .mobile-bottom-nav {
+    display: block;
+  }
+}
+
+.mobile-nav-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  padding: 0.75rem 0.5rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(245, 241, 235, 0.5);
+}
+
+.dark .mobile-nav-container {
+  background: rgba(61, 54, 47, 0.95);
+  border-color: rgba(93, 82, 72, 0.5);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+  color: #B8AA96;
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item.active {
+  color: #9B8AC4;
+}
+
+.dark .mobile-nav-item {
+  color: #8C7D68;
+}
+
+.dark .mobile-nav-item:hover,
+.dark .mobile-nav-item.active {
+  color: #C5B8D9;
+}
+
+.mobile-nav-icon {
+  font-size: 1.25rem;
+}
+
+.mobile-nav-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+.mobile-nav-fab-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 0 0.5rem;
+}
+
+.mobile-nav-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: linear-gradient(135deg, #9B8AC4, #7B68A6);
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(155, 138, 196, 0.4);
+  transform: translateY(-0.75rem);
+  transition: all 0.2s;
+}
+
+.mobile-nav-fab:hover {
+  transform: translateY(-0.875rem);
+  box-shadow: 0 6px 20px rgba(155, 138, 196, 0.5);
+}
+
+.mobile-nav-fab:active {
+  transform: translateY(-0.5rem);
+}
+
+/* Modal animations */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.1s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .animate-modal-in {
+  animation: modal-slide-in 0.15s ease-out;
+}
+
+.modal-leave-active .animate-modal-in {
+  animation: modal-slide-out 0.1s ease-in;
+}
+
+@keyframes modal-slide-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-slide-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}

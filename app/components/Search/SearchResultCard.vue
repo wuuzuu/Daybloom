@@ -1,11 +1,11 @@
 <template>
   <div
-    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md dark:hover:shadow-gray-900 transition-shadow cursor-pointer"
+    class="card card-hover p-4 cursor-pointer"
     @click="$emit('click')"
   >
     <!-- 날짜 및 기분 -->
     <div class="flex items-center justify-between mb-3">
-      <span class="text-lg font-semibold text-gray-900 dark:text-white">{{ result.entry.date }}</span>
+      <span class="text-lg font-semibold text-warm-800 dark:text-cream-100">{{ result.entry.date }}</span>
       <MoodBadge :value="result.entry.mood.value" />
     </div>
 
@@ -17,19 +17,19 @@
         class="flex items-start gap-2"
       >
         <span
-          class="shrink-0 px-2 py-0.5 rounded text-xs font-medium"
+          class="shrink-0 px-2 py-0.5 rounded-lg text-xs font-medium"
           :class="getTypeClass(match.type)"
         >
           {{ getTypeLabel(match.type) }}
         </span>
         <span
-          class="text-gray-700 dark:text-gray-300 text-sm line-clamp-1"
+          class="text-warm-700 dark:text-warm-300 text-sm line-clamp-1"
           v-html="match.highlight"
         />
       </div>
 
       <!-- 더 많은 매칭이 있는 경우 -->
-      <p v-if="result.matches.length > 3" class="text-sm text-gray-500 dark:text-gray-400">
+      <p v-if="result.matches.length > 3" class="text-sm text-warm-500 dark:text-warm-400">
         외 {{ result.matches.length - 3 }}개 더...
       </p>
     </div>
@@ -71,12 +71,12 @@ function getTypeLabel(type: string): string {
 
 function getTypeClass(type: string): string {
   const classes: Record<string, string> = {
-    notes: 'bg-blue-100 text-blue-700',
-    events: 'bg-purple-100 text-purple-700',
-    people: 'bg-green-100 text-green-700',
-    mood: 'bg-orange-100 text-orange-700',
+    notes: 'bg-lavender-100 dark:bg-lavender-900/30 text-lavender-700 dark:text-lavender-400',
+    events: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400',
+    people: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    mood: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
   }
-  return classes[type] || 'bg-gray-100 text-gray-700'
+  return classes[type] || 'bg-cream-100 dark:bg-warm-600 text-warm-600 dark:text-warm-300'
 }
 </script>
 

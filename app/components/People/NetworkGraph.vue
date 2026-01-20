@@ -34,11 +34,11 @@ const moodToScore = (mood: string): number => {
 
 // 점수에 따른 색상
 const getScoreColor = (avgScore: number): { border: string; background: string } => {
-  if (avgScore >= 4.5) return { border: '#22C55E', background: '#DCFCE7' } // 초록
-  if (avgScore >= 3.5) return { border: '#3B82F6', background: '#DBEAFE' } // 파랑
-  if (avgScore >= 2.5) return { border: '#EAB308', background: '#FEF9C3' } // 노랑
-  if (avgScore >= 1.5) return { border: '#F97316', background: '#FFEDD5' } // 주황
-  return { border: '#EF4444', background: '#FEE2E2' } // 빨강
+  if (avgScore >= 4.5) return { border: '#22C55E', background: '#DCFCE7' } // 초록 (great)
+  if (avgScore >= 3.5) return { border: '#38BDF8', background: '#E0F2FE' } // 하늘 (good)
+  if (avgScore >= 2.5) return { border: '#EAB308', background: '#FEF9C3' } // 노랑 (okay)
+  if (avgScore >= 1.5) return { border: '#F97316', background: '#FFEDD5' } // 주황 (bad)
+  return { border: '#EF4444', background: '#FEE2E2' } // 빨강 (awful)
 }
 
 // 사람별 통계 계산
@@ -123,7 +123,7 @@ const createNetworkData = () => {
     id: '__ME__',
     label: '나',
     shape: 'circularImage',
-    image: getAvatarUrl('나', 'avataaars'),
+    image: getAvatarUrl('나', 'lorelei'),
     size: 50,
     font: { 
       size: 16,
@@ -149,7 +149,7 @@ const createNetworkData = () => {
       id: name,
       label: name,
       shape: 'circularImage',
-      image: getAvatarUrl(name, 'fun-emoji'),
+      image: getAvatarUrl(name, 'lorelei'),
       size: size,
       font: { 
         size: 14,
@@ -246,12 +246,35 @@ const initNetwork = () => {
       selectedPerson.value = null
     }
   })
+  
+  // 노드 호버 시 커서 변경
+  network.on('hoverNode', () => {
+    if (networkContainer.value) {
+      networkContainer.value.style.cursor = 'pointer'
+    }
+  })
+  
+  network.on('blurNode', () => {
+    if (networkContainer.value) {
+      networkContainer.value.style.cursor = 'default'
+    }
+  })
 }
 
-// 사이드 패널 닫기
-const closePanel = () => {
+// 모달 닫기
+const closeModal = () => {
   selectedPerson.value = null
+  document.body.style.overflow = ''
 }
+
+// 모달 열기 시 body 스크롤 방지
+watch(selectedPerson, (newVal) => {
+  if (newVal) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+})
 
 // 데이터 변경 시 네트워크 업데이트
 watch(() => props.entries, () => {
@@ -304,13 +327,13 @@ const totalRecords = computed(() => {
   <div class="space-y-4">
     <!-- 통계 -->
     <div class="flex gap-4 text-sm">
-      <div class="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg">
-        <span class="text-blue-600 dark:text-blue-400 font-medium">{{ totalPeople }}</span>
-        <span class="text-gray-600 dark:text-gray-400 ml-1">명의 사람</span>
+      <div class="bg-lavender-50 dark:bg-lavender-900/20 px-4 py-2 rounded-xl">
+        <span class="text-lavender-600 dark:text-lavender-400 font-medium">{{ totalPeople }}</span>
+        <span class="text-warm-600 dark:text-warm-400 ml-1">명의 사람</span>
       </div>
-      <div class="bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-lg">
-        <span class="text-purple-600 dark:text-purple-400 font-medium">{{ totalRecords }}</span>
-        <span class="text-gray-600 dark:text-gray-400 ml-1">회 기록</span>
+      <div class="bg-cream-100 dark:bg-warm-700 px-4 py-2 rounded-xl">
+        <span class="text-warm-700 dark:text-cream-200 font-medium">{{ totalRecords }}</span>
+        <span class="text-warm-600 dark:text-warm-400 ml-1">회 기록</span>
       </div>
     </div>
     
@@ -319,134 +342,159 @@ const totalRecords = computed(() => {
       <!-- 네트워크 그래프 -->
       <div 
         ref="networkContainer" 
-        class="w-full h-[400px] md:h-[500px] bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+        class="w-full h-[400px] md:h-[500px] bg-cream-50 dark:bg-warm-700 rounded-2xl"
       />
       
       <!-- 줌 컨트롤 -->
       <div class="absolute top-3 right-3 flex flex-col gap-1">
         <button
           @click="zoomIn"
-          class="w-8 h-8 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold transition-colors"
+          class="w-8 h-8 bg-white dark:bg-warm-600 border border-cream-200 dark:border-warm-500 rounded-xl shadow-sm hover:bg-cream-50 dark:hover:bg-warm-500 flex items-center justify-center text-warm-600 dark:text-cream-200 font-bold transition-colors"
           title="확대"
         >
           +
         </button>
         <button
           @click="zoomOut"
-          class="w-8 h-8 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold transition-colors"
+          class="w-8 h-8 bg-white dark:bg-warm-600 border border-cream-200 dark:border-warm-500 rounded-xl shadow-sm hover:bg-cream-50 dark:hover:bg-warm-500 flex items-center justify-center text-warm-600 dark:text-cream-200 font-bold transition-colors"
           title="축소"
         >
           −
         </button>
         <button
           @click="resetView"
-          class="w-8 h-8 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-lg transition-colors"
+          class="w-8 h-8 bg-white dark:bg-warm-600 border border-cream-200 dark:border-warm-500 rounded-xl shadow-sm hover:bg-cream-50 dark:hover:bg-warm-500 flex items-center justify-center text-warm-600 dark:text-cream-200 text-lg transition-colors"
           title="전체 보기"
         >
           ⊙
         </button>
       </div>
       
-      <!-- 사이드 패널 (오버레이) -->
-      <div 
-        v-if="selectedPerson"
-        class="absolute top-0 right-0 w-80 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl p-4 h-[400px] md:h-[500px] overflow-hidden flex flex-col"
-      >
-        <!-- 헤더 -->
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <img 
-              :src="getAvatarUrl(selectedPerson, 'fun-emoji')"
-              :alt="selectedPerson"
-              class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700"
-            />
-            <div>
-              <h3 class="font-semibold text-gray-900 dark:text-white">{{ selectedPerson }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ selectedPersonStats?.count || 0 }}회 기록
-              </p>
-            </div>
-          </div>
-          <button 
-            @click="closePanel"
-            class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-          >
-            ✕
-          </button>
-        </div>
-        
-        <!-- 기록 목록 -->
-        <div class="flex-1 overflow-y-auto space-y-3">
-          <div
-            v-for="record in selectedPersonRecords"
-            :key="record.date"
-            class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-          >
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ record.date }}</span>
-              <span 
-                class="text-lg" 
-                :title="record.personMood ? '이 사람에 대한 기분' : '그날 전체 기분'"
-              >
-                {{ getMoodEmoji(record.personMood || record.entryMood) }}
-              </span>
-            </div>
-            <p 
-              v-if="record.feeling"
-              class="text-sm text-gray-700 dark:text-gray-300"
-            >
-              {{ record.feeling }}
-            </p>
-            <p 
-              v-else
-              class="text-sm text-gray-400 dark:text-gray-500 italic"
-            >
-              (감상 없음)
-            </p>
-          </div>
-          
-          <div 
-            v-if="selectedPersonRecords.length === 0"
-            class="text-center text-gray-400 dark:text-gray-500 py-4"
-          >
-            기록이 없습니다.
-          </div>
-        </div>
-      </div>
     </div>
+    
+    <!-- Person Detail Modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div 
+          v-if="selectedPerson" 
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <!-- Backdrop -->
+          <div 
+            class="absolute inset-0 bg-warm-900/50 dark:bg-black/60 backdrop-blur-sm" 
+            @click="closeModal"
+          />
+          
+          <!-- Modal Content -->
+          <div class="relative bg-white dark:bg-warm-800 rounded-3xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden animate-modal-in">
+            <!-- Header -->
+            <div class="flex items-center gap-4 p-5 border-b border-cream-200 dark:border-warm-600">
+              <img 
+                :src="getAvatarUrl(selectedPerson, 'lorelei')"
+                :alt="selectedPerson"
+                class="w-14 h-14 rounded-full bg-cream-100 dark:bg-warm-600"
+              />
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-warm-800 dark:text-cream-100">
+                  {{ selectedPerson }}
+                </h3>
+                <p class="text-sm text-warm-500 dark:text-warm-400">
+                  {{ selectedPersonStats?.count || 0 }}회 기록
+                </p>
+              </div>
+              <button
+                type="button"
+                @click="closeModal"
+                class="p-2 text-warm-400 hover:text-warm-600 dark:hover:text-cream-200 hover:bg-cream-100 dark:hover:bg-warm-700 rounded-xl transition-colors"
+                aria-label="닫기"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Records List -->
+            <div class="p-5 overflow-y-auto max-h-[calc(80vh-100px)]">
+              <p class="text-xs text-warm-500 dark:text-warm-400 mb-3 font-medium">📅 최근 기록</p>
+              
+              <div v-if="selectedPersonRecords.length > 0" class="space-y-3">
+                <div
+                  v-for="record in selectedPersonRecords"
+                  :key="record.date"
+                  class="p-4 bg-cream-50 dark:bg-warm-700 rounded-2xl"
+                >
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-lavender-600 dark:text-lavender-400 font-medium">
+                      {{ record.date }}
+                    </span>
+                    <span 
+                      class="text-xl" 
+                      :title="record.personMood ? '이 사람에 대한 기분' : '그날 전체 기분'"
+                    >
+                      {{ getMoodEmoji(record.personMood || record.entryMood) }}
+                    </span>
+                  </div>
+                  <p 
+                    v-if="record.feeling"
+                    class="text-warm-700 dark:text-warm-200 text-sm"
+                  >
+                    {{ record.feeling }}
+                  </p>
+                  <p 
+                    v-else
+                    class="text-sm text-warm-400 dark:text-warm-500 italic"
+                  >
+                    (감상 없음)
+                  </p>
+                </div>
+              </div>
+              
+              <div 
+                v-else
+                class="text-center py-8"
+              >
+                <span class="text-4xl mb-3 block">📭</span>
+                <p class="text-warm-500 dark:text-warm-400">기록이 없습니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
     
     <!-- 힌트 -->
     <p 
       v-if="!selectedPerson && totalPeople > 0" 
-      class="text-center text-sm text-gray-400 dark:text-gray-500"
+      class="text-center text-sm text-warm-400 dark:text-warm-500"
     >
       💡 사람 노드를 클릭하면 상세 기록을 볼 수 있어요
     </p>
     
     <!-- 범례 -->
-    <div class="flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
+    <div class="flex flex-wrap gap-4 text-xs text-warm-500 dark:text-warm-400">
       <div class="flex items-center gap-2">
-        <div class="w-5 h-5 rounded-full bg-blue-200 border-2 border-blue-500"></div>
+        <div class="w-5 h-5 rounded-full bg-lavender-200 border-2 border-lavender-500"></div>
         <span>나 (중심)</span>
       </div>
       <div class="flex items-center gap-2">
-        <div class="w-4 h-4 rounded-full bg-green-100 border-2 border-green-500"></div>
+        <div class="w-4 h-4 rounded-full bg-green-100 border-2 border-green-400"></div>
+        <span>최고</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-4 h-4 rounded-full bg-sky-100 border-2 border-sky-400"></div>
         <span>좋음</span>
       </div>
       <div class="flex items-center gap-2">
-        <div class="w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-500"></div>
-        <span>보통+</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="w-4 h-4 rounded-full bg-yellow-100 border-2 border-yellow-500"></div>
+        <div class="w-4 h-4 rounded-full bg-yellow-100 border-2 border-yellow-400"></div>
         <span>보통</span>
       </div>
       <div class="flex items-center gap-2">
-        <div class="w-4 h-4 rounded-full bg-orange-100 border-2 border-orange-500"></div>
+        <div class="w-4 h-4 rounded-full bg-orange-100 border-2 border-orange-400"></div>
         <span>나쁨</span>
       </div>
       <div class="flex items-center gap-2">
-        <div class="w-4 h-4 rounded-full bg-red-100 border-2 border-red-500"></div>
+        <div class="w-4 h-4 rounded-full bg-red-100 border-2 border-red-400"></div>
         <span>최악</span>
       </div>
     </div>
@@ -454,11 +502,11 @@ const totalRecords = computed(() => {
     <!-- 빈 상태 -->
     <div 
       v-if="totalPeople === 0" 
-      class="absolute inset-0 flex items-center justify-center bg-gray-50/80 dark:bg-gray-800/80 rounded-xl"
+      class="absolute inset-0 flex items-center justify-center bg-cream-50 dark:bg-warm-800 rounded-2xl z-10"
     >
-      <div class="text-center text-gray-500 dark:text-gray-400">
-        <p class="text-lg mb-2">👥</p>
-        <p>기록된 사람이 없습니다.</p>
+      <div class="text-center text-warm-500 dark:text-warm-400">
+        <p class="text-4xl mb-3">👥</p>
+        <p class="text-lg font-medium mb-1">기록된 사람이 없습니다</p>
         <p class="text-sm">Entry에서 사람을 추가해보세요!</p>
       </div>
     </div>

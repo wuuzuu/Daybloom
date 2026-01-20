@@ -8,25 +8,18 @@ import type { Person } from '~/types'
 
 const entriesStore = useEntriesStore()
 
-// 필터 옵션
 const filterOptions = [
   { value: 7, label: '7일' },
   { value: 30, label: '30일' },
   { value: 90, label: '90일' },
   { value: 0, label: '전체' },
 ]
-const selectedFilter = ref(0) // 0 = 전체
+const selectedFilter = ref(0)
 
-// 모든 entries 가져오기
-const allEntries = computed(() => {
-  return entriesStore.listEntries()
-})
+const allEntries = computed(() => entriesStore.listEntries())
 
-// 필터링된 entries
 const filteredEntries = computed(() => {
-  if (selectedFilter.value === 0) {
-    return allEntries.value
-  }
+  if (selectedFilter.value === 0) return allEntries.value
   
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - selectedFilter.value)
@@ -35,12 +28,10 @@ const filteredEntries = computed(() => {
   return allEntries.value.filter(entry => entry.date >= cutoffStr)
 })
 
-// 사람 이름 추출 헬퍼
 const getPersonName = (person: Person | string): string => {
   return typeof person === 'string' ? person : person.name
 }
 
-// 가장 자주 만난 사람 Top 5
 const topPeople = computed(() => {
   const counts = new Map<string, number>()
   
@@ -57,7 +48,6 @@ const topPeople = computed(() => {
     .map(([name, count]) => ({ name, count }))
 })
 
-// 최근 30일 만난 사람
 const recentPeople = computed(() => {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -71,15 +61,9 @@ const recentPeople = computed(() => {
         const name = getPersonName(person)
         const existing = counts.get(name)
         if (!existing || entry.date > existing.lastDate) {
-          counts.set(name, { 
-            count: (existing?.count || 0) + 1, 
-            lastDate: entry.date 
-          })
+          counts.set(name, { count: (existing?.count || 0) + 1, lastDate: entry.date })
         } else {
-          counts.set(name, { 
-            ...existing, 
-            count: existing.count + 1 
-          })
+          counts.set(name, { ...existing, count: existing.count + 1 })
         }
       })
     }
@@ -90,7 +74,6 @@ const recentPeople = computed(() => {
     .map(([name, data]) => ({ name, ...data }))
 })
 
-// 이번 주 새로 만난 사람
 const newPeopleThisWeek = computed(() => {
   const oneWeekAgo = new Date()
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -124,14 +107,17 @@ const newPeopleThisWeek = computed(() => {
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold dark:text-white mb-6">👥 관계 맵</h1>
+  <div class="container mx-auto px-4 py-6 max-w-2xl lg:max-w-3xl">
+    <!-- Header -->
+    <header class="mb-6">
+      <h1 class="text-2xl font-semibold text-warm-800 dark:text-cream-100">👥 관계 맵</h1>
+    </header>
     
     <!-- 통계 카드들 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <!-- 가장 자주 만난 사람 Top 5 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">🏆 가장 자주 만난 사람</h3>
+      <div class="card">
+        <h3 class="text-sm font-medium text-warm-500 dark:text-warm-400 mb-3">🏆 자주 만난 사람</h3>
         <div class="space-y-2">
           <div
             v-for="(person, index) in topPeople"
@@ -140,22 +126,22 @@ const newPeopleThisWeek = computed(() => {
           >
             <span class="text-lg">{{ index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '　' }}</span>
             <img 
-              :src="getAvatarUrl(person.name, 'fun-emoji')"
+              :src="getAvatarUrl(person.name, 'lorelei')"
               :alt="person.name"
-              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700"
+              class="w-8 h-8 rounded-full bg-cream-100 dark:bg-warm-700"
             />
-            <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">{{ person.name }}</span>
-            <span class="text-xs text-gray-500 dark:text-gray-400">{{ person.count }}회</span>
+            <span class="flex-1 text-sm text-warm-700 dark:text-warm-200 truncate">{{ person.name }}</span>
+            <span class="text-xs text-warm-400 dark:text-warm-500">{{ person.count }}회</span>
           </div>
-          <p v-if="topPeople.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-            기록이 없습니다
+          <p v-if="topPeople.length === 0" class="text-sm text-warm-400 dark:text-warm-500 text-center py-2">
+            기록이 없어요
           </p>
         </div>
       </div>
       
       <!-- 최근 30일 만난 사람 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">📅 최근 30일</h3>
+      <div class="card">
+        <h3 class="text-sm font-medium text-warm-500 dark:text-warm-400 mb-3">📅 최근 30일</h3>
         <div class="space-y-2">
           <div
             v-for="person in recentPeople.slice(0, 5)"
@@ -163,39 +149,39 @@ const newPeopleThisWeek = computed(() => {
             class="flex items-center gap-3"
           >
             <img 
-              :src="getAvatarUrl(person.name, 'fun-emoji')"
+              :src="getAvatarUrl(person.name, 'lorelei')"
               :alt="person.name"
-              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700"
+              class="w-8 h-8 rounded-full bg-cream-100 dark:bg-warm-700"
             />
-            <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">{{ person.name }}</span>
-            <span class="text-xs text-gray-500 dark:text-gray-400">{{ person.count }}회</span>
+            <span class="flex-1 text-sm text-warm-700 dark:text-warm-200 truncate">{{ person.name }}</span>
+            <span class="text-xs text-warm-400 dark:text-warm-500">{{ person.count }}회</span>
           </div>
-          <p v-if="recentPeople.length === 0" class="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-            기록이 없습니다
+          <p v-if="recentPeople.length === 0" class="text-sm text-warm-400 dark:text-warm-500 text-center py-2">
+            기록이 없어요
           </p>
-          <p v-else-if="recentPeople.length > 5" class="text-xs text-gray-400 dark:text-gray-500 text-center">
+          <p v-else-if="recentPeople.length > 5" class="text-xs text-warm-400 dark:text-warm-500 text-center">
             +{{ recentPeople.length - 5 }}명 더
           </p>
         </div>
       </div>
       
       <!-- 이번 주 새로 만난 사람 -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">✨ 이번 주 새로운 사람</h3>
+      <div class="card">
+        <h3 class="text-sm font-medium text-warm-500 dark:text-warm-400 mb-3">✨ 이번 주 새로운 사람</h3>
         <div class="flex flex-wrap gap-2">
           <div
             v-for="name in newPeopleThisWeek"
             :key="name"
-            class="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 rounded-full"
+            class="flex items-center gap-2 bg-lavender-50 dark:bg-lavender-900/20 px-3 py-1.5 rounded-full"
           >
             <img 
-              :src="getAvatarUrl(name, 'fun-emoji')"
+              :src="getAvatarUrl(name, 'lorelei')"
               :alt="name"
-              class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700"
+              class="w-6 h-6 rounded-full bg-cream-100 dark:bg-warm-700"
             />
-            <span class="text-sm text-green-700 dark:text-green-400">{{ name }}</span>
+            <span class="text-sm text-lavender-600 dark:text-lavender-400">{{ name }}</span>
           </div>
-          <p v-if="newPeopleThisWeek.length === 0" class="text-sm text-gray-400 dark:text-gray-500 w-full text-center py-2">
+          <p v-if="newPeopleThisWeek.length === 0" class="text-sm text-warm-400 dark:text-warm-500 w-full text-center py-2">
             새로운 사람 없음
           </p>
         </div>
@@ -203,28 +189,28 @@ const newPeopleThisWeek = computed(() => {
     </div>
     
     <!-- 네트워크 그래프 -->
-    <div class="mb-8">
+    <section class="mb-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div>
-          <h2 class="text-lg font-semibold dark:text-white">네트워크 그래프</h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            노드를 드래그하거나 줌/패닝할 수 있어요. 클릭하면 상세 기록을 볼 수 있어요.
+          <h2 class="text-lg font-semibold text-warm-700 dark:text-cream-200">네트워크 그래프</h2>
+          <p class="text-sm text-warm-500 dark:text-warm-400">
+            노드를 드래그하거나 줌/패닝할 수 있어요
           </p>
         </div>
         
         <!-- 기간 필터 -->
         <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">기간:</span>
+          <span class="text-sm text-warm-500 dark:text-warm-400">기간:</span>
           <div class="flex gap-1">
             <button
               v-for="option in filterOptions"
               :key="option.value"
               @click="selectedFilter = option.value"
               :class="[
-                'px-3 py-1 text-sm rounded-full transition-colors',
+                'px-3 py-1.5 text-sm rounded-xl transition-all',
                 selectedFilter === option.value
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  ? 'bg-lavender-500 text-white'
+                  : 'bg-cream-100 dark:bg-warm-700 text-warm-600 dark:text-warm-300 hover:bg-cream-200 dark:hover:bg-warm-600'
               ]"
             >
               {{ option.label }}
@@ -233,23 +219,24 @@ const newPeopleThisWeek = computed(() => {
         </div>
       </div>
       
-      <!-- 필터 결과 -->
-      <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+      <p class="text-xs text-warm-400 dark:text-warm-500 mb-2">
         {{ filteredEntries.length }}개의 기록에서 {{ new Set(filteredEntries.flatMap(e => e.people.map(p => typeof p === 'string' ? p : p.name))).size }}명 표시 중
       </p>
       
-      <NetworkGraph :entries="filteredEntries" />
-    </div>
+      <div class="card p-0 overflow-hidden">
+        <NetworkGraph :entries="filteredEntries" />
+      </div>
+    </section>
     
     <!-- 감정 히트맵 -->
-    <div class="mb-8">
-      <h2 class="text-lg font-semibold dark:text-white mb-4">🎨 감정 히트맵</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        각 사람과 함께했을 때의 기분 분포를 한눈에 볼 수 있어요.
+    <section>
+      <h2 class="text-lg font-semibold text-warm-700 dark:text-cream-200 mb-2">🎨 감정 히트맵</h2>
+      <p class="text-sm text-warm-500 dark:text-warm-400 mb-4">
+        각 사람과 함께했을 때의 기분 분포예요
       </p>
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <div class="card">
         <MoodHeatmap :entries="filteredEntries" />
       </div>
-    </div>
+    </section>
   </div>
 </template>

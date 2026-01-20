@@ -32,16 +32,16 @@ const moodEmojis: Record<MoodValue, string> = {
 }
 
 const moodColors: Record<MoodValue, string> = {
-  great: 'bg-green-500',
-  good: 'bg-blue-500',
-  okay: 'bg-yellow-500',
-  bad: 'bg-orange-500',
-  awful: 'bg-red-500',
+  great: 'bg-green-400',
+  good: 'bg-sky-400',
+  okay: 'bg-yellow-400',
+  bad: 'bg-orange-400',
+  awful: 'bg-red-400',
 }
 
 const moodBgColors: Record<MoodValue, string> = {
   great: 'bg-green-100 dark:bg-green-900/30',
-  good: 'bg-blue-100 dark:bg-blue-900/30',
+  good: 'bg-sky-100 dark:bg-sky-900/30',
   okay: 'bg-yellow-100 dark:bg-yellow-900/30',
   bad: 'bg-orange-100 dark:bg-orange-900/30',
   awful: 'bg-red-100 dark:bg-red-900/30',
@@ -101,14 +101,14 @@ const getCellOpacity = (count: number): number => {
   <div class="space-y-4">
     <!-- 범례 -->
     <div class="flex flex-wrap items-center gap-4 text-sm">
-      <span class="text-gray-600 dark:text-gray-400">범례:</span>
+      <span class="text-warm-600 dark:text-warm-400">범례:</span>
       <div 
         v-for="mood in moodTypes" 
         :key="mood"
         class="flex items-center gap-1"
       >
-        <div :class="[moodColors[mood], 'w-4 h-4 rounded']"></div>
-        <span class="text-gray-600 dark:text-gray-400">{{ moodEmojis[mood] }} {{ moodLabels[mood] }}</span>
+        <div :class="[moodColors[mood], 'w-4 h-4 rounded-lg']"></div>
+        <span class="text-warm-600 dark:text-warm-400">{{ moodEmojis[mood] }} {{ moodLabels[mood] }}</span>
       </div>
     </div>
     
@@ -117,32 +117,32 @@ const getCellOpacity = (count: number): number => {
       <table class="w-full border-collapse">
         <thead>
           <tr>
-            <th class="text-left p-2 text-sm font-medium text-gray-600 dark:text-gray-400 w-40">사람</th>
+            <th class="text-left p-2 text-sm font-medium text-warm-600 dark:text-warm-400 w-40">사람</th>
             <th 
               v-for="mood in moodTypes" 
               :key="mood"
-              class="p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-400 w-20"
+              class="p-2 text-center text-sm font-medium text-warm-600 dark:text-warm-400 w-20"
             >
               {{ moodEmojis[mood] }}
             </th>
-            <th class="p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-400 w-16">총계</th>
+            <th class="p-2 text-center text-sm font-medium text-warm-600 dark:text-warm-400 w-16">총계</th>
           </tr>
         </thead>
         <tbody>
           <tr 
             v-for="person in peopleHeatmapData" 
             :key="person.name"
-            class="border-t border-gray-200 dark:border-gray-700"
+            class="border-t border-cream-200 dark:border-warm-600"
           >
             <!-- 사람 이름 -->
             <td class="p-2">
               <div class="flex items-center gap-2">
                 <img 
-                  :src="getAvatarUrl(person.name, 'fun-emoji')"
+                  :src="getAvatarUrl(person.name, 'lorelei')"
                   :alt="person.name"
-                  class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700"
+                  class="w-8 h-8 rounded-full bg-cream-100 dark:bg-warm-600"
                 />
-                <span class="text-sm text-gray-900 dark:text-gray-100 truncate">{{ person.name }}</span>
+                <span class="text-sm text-warm-800 dark:text-cream-100 truncate">{{ person.name }}</span>
               </div>
             </td>
             
@@ -154,22 +154,22 @@ const getCellOpacity = (count: number): number => {
             >
               <div 
                 :class="[
-                  'w-full h-10 rounded flex items-center justify-center text-sm font-medium transition-all',
-                  person.counts[mood] > 0 ? moodBgColors[mood] : 'bg-gray-50 dark:bg-gray-800'
+                  'w-full h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all',
+                  person.counts[mood] > 0 ? moodBgColors[mood] : 'bg-cream-50 dark:bg-warm-700'
                 ]"
                 :style="person.counts[mood] > 0 ? { opacity: getCellOpacity(person.counts[mood]) } : {}"
                 :title="`${moodLabels[mood]}: ${person.counts[mood]}회`"
               >
-                <span v-if="person.counts[mood] > 0" class="text-gray-700 dark:text-gray-200">
+                <span v-if="person.counts[mood] > 0" class="text-warm-700 dark:text-cream-200">
                   {{ person.counts[mood] }}
                 </span>
-                <span v-else class="text-gray-300 dark:text-gray-600">-</span>
+                <span v-else class="text-warm-300 dark:text-warm-600">-</span>
               </div>
             </td>
             
             <!-- 총계 -->
             <td class="p-2 text-center">
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ person.total }}</span>
+              <span class="text-sm font-medium text-lavender-600 dark:text-lavender-400">{{ person.total }}</span>
             </td>
           </tr>
         </tbody>
@@ -179,7 +179,7 @@ const getCellOpacity = (count: number): number => {
     <!-- 빈 상태 -->
     <div 
       v-if="peopleHeatmapData.length === 0"
-      class="text-center py-8 text-gray-500 dark:text-gray-400"
+      class="text-center py-8 text-warm-500 dark:text-warm-400"
     >
       <p class="text-lg mb-2">🎨</p>
       <p>표시할 데이터가 없습니다.</p>
@@ -187,7 +187,7 @@ const getCellOpacity = (count: number): number => {
     </div>
     
     <!-- 도움말 -->
-    <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+    <p class="text-xs text-warm-500 dark:text-warm-400 text-center">
       💡 색상이 진할수록 해당 기분으로 더 많이 기록됨
     </p>
   </div>

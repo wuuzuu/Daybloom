@@ -11,8 +11,9 @@ type AvatarStyle =
   | 'notionists'
   | 'thumbs'
   | 'big-smile'
+  | 'pixel-art'
 
-const DEFAULT_STYLE: AvatarStyle = 'avataaars'
+const DEFAULT_STYLE: AvatarStyle = 'lorelei'
 
 export function getAvatarUrl(name: string, style: AvatarStyle = DEFAULT_STYLE): string {
   const seed = encodeURIComponent(name)
@@ -30,5 +31,5 @@ export const avatar = {
   notionists: (name: string) => getAvatarUrl(name, 'notionists'),
   thumbs: (name: string) => getAvatarUrl(name, 'thumbs'),
   bigSmile: (name: string) => getAvatarUrl(name, 'big-smile'),
+  pixelArt: (name: string) => getAvatarUrl(name, 'pixel-art'),
 }
-

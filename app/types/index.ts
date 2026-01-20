@@ -34,8 +34,11 @@ export interface WeeklySummary {
 }
 
 export interface WeeklyNotes {
-  highlights: string[]
-  nextExperiment: string
+  highlights?: string[]
+  nextExperiment?: string
+  // DB 호환 필드 (마이그레이션용)
+  reflection?: string
+  goals?: string[]
 }
 
 export interface StorageData {
