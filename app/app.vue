@@ -353,7 +353,9 @@ const initializeApp = async (forceRefresh = false) => {
 watch(user, async (newUser, oldUser) => {
   if (import.meta.server) return
   
-  // 사용자가 바뀌면 이전 데이터 클리어 후 새로 로드
+  // 새로 로그인한 경우 (로그인 없음 -> 로그인 있음)
+  const isNewLogin = !oldUser?.id && newUser?.id
+  // 사용자가 바뀐 경우 (다른 계정으로 전환)
   const isUserChanged = oldUser?.id && newUser?.id && oldUser.id !== newUser.id
   
   if (newUser?.id) {
@@ -361,9 +363,9 @@ watch(user, async (newUser, oldUser) => {
       clearAllStores() // 다른 사용자로 전환 시 데이터 클리어
     }
     
-    const shouldFetch = isUserChanged || !entriesStore.isInitialized
-    if (shouldFetch) {
-      await initializeApp(isUserChanged)
+    // 새 로그인이거나 사용자 전환이거나 아직 초기화 안된 경우 데이터 로드
+    if (isNewLogin || isUserChanged || !entriesStore.isInitialized) {
+      await initializeApp(true) // 항상 새로 로드
     }
   } else if (!newUser && oldUser) {
     // 로그아웃 시 데이터 클리어
