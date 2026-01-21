@@ -335,3 +335,15 @@
     transform: scale(0.95) translateY(10px);
   }
 }
+
+/* Dropdown animations */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.15s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
