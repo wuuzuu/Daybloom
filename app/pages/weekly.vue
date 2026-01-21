@@ -32,39 +32,39 @@
       </div>
     </header>
 
-    <div v-if="summary" class="space-y-6">
+    <div class="space-y-6">
       <!-- 기본 통계 -->
-      <WeeklyStats :summary="summary" />
+      <WeeklyStats v-if="summary" :summary="summary" />
 
       <!-- Top People -->
-      <TopPeople :top-people="summary.topPeople" />
+      <TopPeople v-if="summary" :top-people="summary.topPeople" />
 
-      <!-- 사용자 입력: Highlights & Next Experiment -->
+      <!-- 할 일 체크리스트 -->
       <WeeklyNotesView
         v-if="!isEditingNotes"
-        :highlights="summary.highlights"
-        :next-experiment="summary.nextExperiment"
+        :todos="savedNotes?.todos"
         @edit="isEditingNotes = true"
+        @toggle-todo="handleToggleTodo"
       />
       <WeeklyNotesForm
         v-else
-        :initial-highlights="summary.highlights"
-        :initial-next-experiment="summary.nextExperiment"
+        :initial-todos="savedNotes?.todos"
         :is-saving="isSavingNotes"
         @save="handleSaveNotes"
+        @cancel="handleCancelEdit"
       />
 
       <!-- 이번 주 엔트리 목록 -->
-      <section>
+      <section v-if="weekEntries.length > 0">
         <h2 class="text-lg font-semibold text-warm-700 dark:text-cream-200 mb-4">이번 주 기록</h2>
         <EntryList :entries="weekEntries" />
       </section>
-    </div>
-
-    <div v-else class="card text-center py-12">
-      <span class="text-4xl mb-3 block">📭</span>
-      <p class="text-warm-500 dark:text-warm-400">이번 주 데이터가 없어요</p>
-      <p class="text-warm-400 dark:text-warm-500 text-sm mt-1">기록을 시작해보세요!</p>
+      
+      <div v-else-if="!summary" class="card text-center py-12">
+        <span class="text-4xl mb-3 block">📭</span>
+        <p class="text-warm-500 dark:text-warm-400">이번 주 데이터가 없어요</p>
+        <p class="text-warm-400 dark:text-warm-500 text-sm mt-1">기록을 시작해보세요!</p>
+      </div>
     </div>
   </div>
 </template>
@@ -75,7 +75,7 @@ import { useEntriesStore } from '~/stores/entries'
 import { useWeeklyStore } from '~/stores/weekly'
 import { getToday, getWeekRange, getPreviousWeek, getNextWeek } from '~/utils/date'
 import { buildWeeklySummary } from '~/utils/summary'
-import type { WeeklySummary } from '~/types'
+import type { WeeklySummary, WeeklyTodo } from '~/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,12 +94,12 @@ const weekRange = computed(() => getWeekRange(selectedWeekStart.value))
 const isCurrentWeek = computed(() => selectedWeekStart.value === currentWeekRange.weekStart)
 
 const savedNotes = computed(() => weeklyStore.getWeeklyNotes(weekRange.value.weekStart))
-const isEditingNotes = ref(!savedNotes.value || (!savedNotes.value.highlights?.length && !savedNotes.value.nextExperiment))
+const isEditingNotes = ref(!savedNotes.value?.todos?.length)
 const isSavingNotes = ref(false)
 
 watch(selectedWeekStart, () => {
   const notes = weeklyStore.getWeeklyNotes(weekRange.value.weekStart)
-  isEditingNotes.value = !notes || (!notes.highlights?.length && !notes.nextExperiment)
+  isEditingNotes.value = !notes?.todos?.length
 })
 
 const goToPreviousWeek = (): void => {
@@ -128,31 +128,32 @@ const summary = computed<WeeklySummary | null>(() => {
   const entries = weekEntries.value
   if (entries.length === 0) return null
   
-  const baseSummary = buildWeeklySummary(
+  return buildWeeklySummary(
     entries,
     weekRange.value.weekStart,
     weekRange.value.weekEnd
   )
-  
-  const savedNotes = weeklyStore.getWeeklyNotes(weekRange.value.weekStart)
-  if (savedNotes) {
-    baseSummary.highlights = savedNotes.highlights
-    baseSummary.nextExperiment = savedNotes.nextExperiment
-  }
-  
-  return baseSummary
 })
 
-const handleSaveNotes = async (data: { highlights: string[]; nextExperiment: string }): Promise<void> => {
+const handleSaveNotes = async (data: { todos: WeeklyTodo[] }): Promise<void> => {
   isSavingNotes.value = true
   try {
     await weeklyStore.setWeeklyNotes(weekRange.value.weekStart, {
-      highlights: data.highlights,
-      nextExperiment: data.nextExperiment,
+      todos: data.todos,
     })
     isEditingNotes.value = false
   } finally {
     isSavingNotes.value = false
+  }
+}
+
+const handleToggleTodo = async (todoId: string): Promise<void> => {
+  await weeklyStore.toggleTodo(weekRange.value.weekStart, todoId)
+}
+
+const handleCancelEdit = (): void => {
+  if (savedNotes.value?.todos?.length) {
+    isEditingNotes.value = false
   }
 }
 </script>

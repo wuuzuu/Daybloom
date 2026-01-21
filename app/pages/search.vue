@@ -75,26 +75,29 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useEntriesStore } from '~/stores/entries'
+import { useProjectsStore } from '~/stores/projects'
 import type { Entry } from '~/types'
 import SearchResultCard from '~/components/Search/SearchResultCard.vue'
 
 const router = useRouter()
 const entriesStore = useEntriesStore()
+const projectsStore = useProjectsStore()
 
 const searchQuery = ref('')
-const activeFilters = ref<string[]>(['notes', 'events', 'people', 'mood'])
+const activeFilters = ref<string[]>(['notes', 'events', 'people', 'mood', 'crew'])
 
 const filters = [
   { key: 'notes', label: '📝 Notes' },
   { key: 'events', label: '📅 Events' },
   { key: 'people', label: '👥 People' },
   { key: 'mood', label: '😊 Mood' },
+  { key: 'crew', label: '🚀 Crew' },
 ]
 
 interface SearchResult {
   entry: Entry
   matches: {
-    type: 'notes' | 'events' | 'people' | 'mood'
+    type: 'notes' | 'events' | 'people' | 'mood' | 'crew'
     text: string
     highlight: string
   }[]
@@ -156,6 +159,23 @@ const searchResults = computed<SearchResult[]>(() => {
           text: entry.mood.note,
           highlight: highlightText(entry.mood.note, query),
         })
+      }
+    }
+
+    // Crew 검색 (workItems의 project crew 및 title)
+    if (activeFilters.value.includes('crew') && entry.workItems) {
+      for (const workItem of entry.workItems) {
+        const project = projectsStore.getProjectById(workItem.projectId)
+        if (project) {
+          const crewText = `[${project.crew}] ${project.title}`
+          if (crewText.toLowerCase().includes(query) || project.crew.toLowerCase().includes(query)) {
+            matches.push({
+              type: 'crew',
+              text: crewText,
+              highlight: highlightText(crewText, query),
+            })
+          }
+        }
       }
     }
 

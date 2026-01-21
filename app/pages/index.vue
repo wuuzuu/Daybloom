@@ -39,15 +39,15 @@
       </div>
     </section>
 
-    <!-- Journal Input Card -->
+    <!-- Mood Description Card -->
     <section class="card card-hover mb-6">
       <label class="block">
         <span class="text-warm-600 dark:text-warm-300 text-sm font-medium mb-2 block">
-          오늘의 한마디 ✨
+          {{ selectedMoodLabel ? `왜 "${selectedMoodLabel}" 인가요?` : '기분을 더 자세히 적어보세요' }} 💭
         </span>
         <textarea
           v-model="journalText"
-          placeholder="오늘 있었던 일, 느낀 점을 자유롭게 적어보세요..."
+          :placeholder="selectedMood ? '무슨 일이 있었나요? 어떤 감정이 드나요?' : '위에서 기분을 먼저 선택해주세요...'"
           class="w-full px-4 py-3 bg-cream-50 dark:bg-warm-700 border border-cream-200 dark:border-warm-600 rounded-2xl 
                  text-warm-800 dark:text-cream-100 placeholder-warm-400 dark:placeholder-warm-500
                  focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 focus:border-transparent
@@ -137,10 +137,10 @@
                     </span>
                   </div>
                   <p 
-                    v-if="entry.bullets.length > 0" 
+                    v-if="entry.mood.note" 
                     class="text-warm-700 dark:text-warm-300 text-sm line-clamp-2"
                   >
-                    {{ entry.bullets[0] }}
+                    {{ entry.mood.note }}
                   </p>
                   <p 
                     v-else 
@@ -191,7 +191,7 @@ const todayEntry = computed(() => {
 watch(todayEntry, (entry) => {
   if (entry) {
     selectedMood.value = entry.mood.value
-    journalText.value = entry.bullets[0] ?? ''
+    journalText.value = entry.mood.note ?? ''
   }
 }, { immediate: true })
 

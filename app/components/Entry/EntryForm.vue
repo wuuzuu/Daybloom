@@ -1,43 +1,238 @@
 <template>
   <form @submit.prevent="handleSave" class="space-y-6">
-    <!-- Notes -->
+    <!-- 🆕 Work Items (Projects) -->
     <div>
       <label class="block text-sm font-medium mb-3 text-warm-700 dark:text-cream-200">
-        📝 오늘의 기록 (최대 10개)
+        💼 오늘 작업한 프로젝트
       </label>
-      <div class="space-y-3">
+      
+      <!-- 선택된 프로젝트들 -->
+      <div v-if="form.workItems.length > 0" class="space-y-3 mb-4">
         <div
-          v-for="(bullet, index) in form.bullets"
-          :key="index"
-          class="flex gap-2"
+          v-for="(workItem, index) in form.workItems"
+          :key="workItem.projectId"
+          class="p-4 bg-cream-50 dark:bg-warm-800 rounded-2xl border border-cream-200 dark:border-warm-700"
         >
-          <input
-            v-model="form.bullets[index]"
-            type="text"
-            :placeholder="`${index + 1}번째 기록...`"
-            class="flex-1 border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
+          <!-- 프로젝트 정보 헤더 -->
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 bg-lavender-100 dark:bg-lavender-900/30 text-lavender-700 dark:text-lavender-300 text-xs font-medium rounded-lg">
+                  {{ getProjectById(workItem.projectId)?.crew }}
+                </span>
+                <a 
+                  v-if="getProjectById(workItem.projectId)?.jiraLink"
+                  :href="getProjectById(workItem.projectId)?.jiraLink"
+                  target="_blank"
+                  class="text-xs text-lavender-600 dark:text-lavender-400 font-mono hover:underline"
+                  @click.stop
+                >
+                  🎫 {{ extractTicketFromUrl(getProjectById(workItem.projectId)?.jiraLink || '') }}
+                </a>
+              </div>
+              <p class="text-warm-800 dark:text-cream-100 font-medium">
+                {{ getProjectById(workItem.projectId)?.title }}
+              </p>
+              <a 
+                v-if="getProjectById(workItem.projectId)?.notionLink"
+                :href="getProjectById(workItem.projectId)?.notionLink"
+                target="_blank"
+                class="text-xs text-lavender-600 dark:text-lavender-400 hover:underline"
+              >
+                📎 노션 링크
+              </a>
+            </div>
+            <button
+              type="button"
+              @click="removeWorkItem(index)"
+              class="p-1 text-warm-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <!-- 오늘 작업 내용 -->
+          <textarea
+            v-model="workItem.dailyNote"
+            rows="2"
+            placeholder="오늘 이 프로젝트에서 한 작업..."
+            class="w-full border border-warm-300 dark:border-warm-500 bg-white dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
           />
-          <button
-            type="button"
-            @click="removeBullet(index)"
-            class="px-3 py-2 text-warm-500 dark:text-warm-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
-          >
-            ✕
-          </button>
         </div>
+      </div>
+      
+      <!-- 프로젝트 선택 드롭다운 -->
+      <div class="relative">
         <button
           type="button"
-          @click="addBullet"
-          :disabled="bulletCount >= 10"
-          class="w-full border-2 border-dashed border-cream-300 dark:border-warm-600 rounded-xl px-4 py-3 text-warm-500 dark:text-warm-400 hover:border-lavender-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="showProjectSelector = !showProjectSelector"
+          class="w-full border-2 border-dashed border-cream-300 dark:border-warm-600 rounded-xl px-4 py-3 text-warm-500 dark:text-warm-400 hover:border-lavender-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-all text-left"
         >
-          + 기록 추가
+          + 프로젝트 추가
         </button>
-        <p class="text-sm text-warm-400 dark:text-warm-500 text-right" :class="{ 'text-red-500 dark:text-red-400 font-medium': bulletCount > 10 }">
-          {{ bulletCount }}/10
-        </p>
+        
+        <!-- 프로젝트 선택 팝업 -->
+        <div
+          v-if="showProjectSelector"
+          class="absolute z-50 top-full left-0 right-0 mt-2 bg-white dark:bg-warm-800 border border-cream-200 dark:border-warm-600 rounded-2xl shadow-xl overflow-hidden max-h-80 overflow-y-auto"
+        >
+          <!-- 새 프로젝트 추가 버튼 -->
+          <button
+            type="button"
+            @click="showNewProjectForm = true; showProjectSelector = false"
+            class="w-full px-4 py-3 text-left text-lavender-600 dark:text-lavender-400 hover:bg-lavender-50 dark:hover:bg-lavender-900/20 transition-colors border-b border-cream-200 dark:border-warm-600 flex items-center gap-2"
+          >
+            <span class="text-lg">✨</span>
+            <span>새 프로젝트 만들기</span>
+          </button>
+          
+          <!-- 진행 중인 프로젝트 목록 -->
+          <div v-if="availableProjects.length > 0">
+            <p class="px-4 py-2 text-xs text-warm-500 dark:text-warm-400 bg-cream-50 dark:bg-warm-700">
+              진행 중인 프로젝트
+            </p>
+            <button
+              v-for="project in availableProjects"
+              :key="project.id"
+              type="button"
+              @click="addWorkItem(project.id)"
+              class="w-full px-4 py-3 text-left hover:bg-cream-50 dark:hover:bg-warm-700 transition-colors"
+            >
+              <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 bg-lavender-100 dark:bg-lavender-900/30 text-lavender-700 dark:text-lavender-300 text-xs font-medium rounded-lg">
+                  {{ project.crew }}
+                </span>
+                <span v-if="project.jiraLink" class="text-xs text-warm-500 dark:text-warm-400 font-mono">
+                  🎫 {{ extractTicketFromUrl(project.jiraLink) }}
+                </span>
+              </div>
+              <p class="text-warm-800 dark:text-cream-100 text-sm">{{ project.title }}</p>
+            </button>
+          </div>
+          
+          <div v-else class="px-4 py-6 text-center text-warm-500 dark:text-warm-400">
+            <p class="text-sm">진행 중인 프로젝트가 없습니다</p>
+            <p class="text-xs mt-1">새 프로젝트를 만들어보세요!</p>
+          </div>
+        </div>
       </div>
     </div>
+    
+    <!-- 🆕 새 프로젝트 추가 모달 -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div 
+          v-if="showNewProjectForm" 
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          @click.self="showNewProjectForm = false"
+        >
+          <div class="absolute inset-0 bg-warm-900/50 dark:bg-black/60 backdrop-blur-sm" />
+          
+          <div class="relative bg-white dark:bg-warm-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-modal-in">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-warm-800 dark:text-cream-100 mb-4">
+                ✨ 새 프로젝트 추가
+              </h3>
+              
+              <div class="space-y-4">
+                <!-- 크루 선택/입력 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    크루 *
+                  </label>
+                  <div class="flex gap-2 flex-wrap mb-2">
+                    <button
+                      v-for="crew in existingCrews"
+                      :key="crew"
+                      type="button"
+                      @click="newProject.crew = crew"
+                      :class="[
+                        'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
+                        newProject.crew === crew
+                          ? 'bg-lavender-500 text-white'
+                          : 'bg-cream-100 dark:bg-warm-700 text-warm-600 dark:text-warm-300 hover:bg-lavender-100 dark:hover:bg-lavender-900/30'
+                      ]"
+                    >
+                      {{ crew }}
+                    </button>
+                  </div>
+                  <input
+                    v-model="newProject.crew"
+                    type="text"
+                    placeholder="새 크루명 입력..."
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500"
+                  />
+                </div>
+                
+                <!-- 지라 티켓 URL -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    지라 티켓 URL (선택)
+                  </label>
+                  <input
+                    v-model="newProject.jiraLink"
+                    type="url"
+                    placeholder="https://jira.company.com/browse/KCN-123"
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500"
+                  />
+                  <p v-if="newProject.jiraLink" class="mt-1 text-xs text-lavender-600 dark:text-lavender-400">
+                    표시: 🎫 {{ extractTicketFromUrl(newProject.jiraLink) }}
+                  </p>
+                </div>
+                
+                <!-- 작업 제목 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    작업 제목 *
+                  </label>
+                  <input
+                    v-model="newProject.title"
+                    type="text"
+                    placeholder="어떤 작업인가요?"
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500"
+                  />
+                </div>
+                
+                <!-- 노션 링크 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    노션 링크 (선택)
+                  </label>
+                  <input
+                    v-model="newProject.notionLink"
+                    type="url"
+                    placeholder="https://notion.so/..."
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500"
+                  />
+                </div>
+              </div>
+              
+              <div class="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  @click="showNewProjectForm = false"
+                  class="flex-1 px-4 py-3 bg-cream-100 dark:bg-warm-700 text-warm-700 dark:text-cream-200 rounded-2xl font-medium hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  @click="handleCreateProject"
+                  :disabled="!newProject.crew || !newProject.title || isCreatingProject"
+                  class="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span v-if="isCreatingProject" class="inline-flex items-center gap-2">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    추가 중...
+                  </span>
+                  <span v-else>추가</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Events -->
     <div>
@@ -87,13 +282,18 @@
         {{ selectedMoodLabel }}
       </p>
       
-      <!-- Mood Note -->
-      <input
-        v-model="form.mood.note"
-        type="text"
-        placeholder="기분에 대한 한마디 (선택)"
-        class="w-full border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
-      />
+      <!-- Mood Reason -->
+      <div class="mt-4">
+        <label class="block text-sm text-warm-500 dark:text-warm-400 mb-2">
+          {{ selectedMoodLabel ? `왜 "${selectedMoodLabel}" 인가요?` : '기분을 더 자세히 적어보세요' }} 💭
+        </label>
+        <textarea
+          v-model="form.mood.note"
+          rows="3"
+          :placeholder="form.mood.value ? '무슨 일이 있었나요? 어떤 감정이 드나요?' : '위에서 기분을 먼저 선택해주세요...'"
+          class="w-full border border-warm-300 dark:border-warm-500 bg-cream-100 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
+        />
+      </div>
     </div>
 
     <!-- People -->
@@ -244,11 +444,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import type { Mood, MoodValue } from '~/types'
+import type { Mood, MoodValue, WorkItem, Project } from '~/types'
 import { useEntriesStore } from '~/stores/entries'
+import { useProjectsStore } from '~/stores/projects'
 import { getAvatarUrl } from '~/utils/avatar'
 
 const entriesStore = useEntriesStore()
+const projectsStore = useProjectsStore()
 
 // Mood options with emojis
 const moodOptions = [
@@ -296,11 +498,12 @@ const getPersonMoodLabel = (moodValue: string): string => {
   return mood ? mood.label : '기분'
 }
 
-// Click outside handler to close person mood dropdown
+// Click outside handler to close dropdowns
 const handleClickOutside = (event: MouseEvent): void => {
   const target = event.target as HTMLElement
   if (!target.closest('.relative')) {
     openPersonMoodIndex.value = null
+    showProjectSelector.value = false
   }
 }
 
@@ -320,6 +523,7 @@ const props = defineProps<{
     mood: Mood
     people: Array<{ name: string; feeling?: string; mood?: MoodValue }> | string[]
     tomorrow?: string
+    workItems?: WorkItem[]
   }
   hasExistingEntry?: boolean
   isSaving?: boolean
@@ -332,9 +536,92 @@ const emit = defineEmits<{
     mood: Mood
     people: Array<{ name: string; feeling?: string; mood?: MoodValue }>
     tomorrow?: string
+    workItems?: WorkItem[]
   }]
   delete: []
 }>()
+
+// 🆕 프로젝트 관련 상태
+const showProjectSelector = ref(false)
+const showNewProjectForm = ref(false)
+const isCreatingProject = ref(false)
+const newProject = ref({
+  crew: '',
+  jiraLink: '',
+  title: '',
+  notionLink: '',
+})
+
+// URL에서 티켓 번호 추출 (마지막 / 뒤의 텍스트)
+const extractTicketFromUrl = (url: string): string => {
+  if (!url) return ''
+  try {
+    const cleanUrl = url.replace(/\/+$/, '') // 끝의 슬래시 제거
+    const parts = cleanUrl.split('/')
+    return parts[parts.length - 1] || ''
+  } catch {
+    return ''
+  }
+}
+
+// 기존 크루 목록
+const existingCrews = computed(() => projectsStore.uniqueCrews)
+
+// 선택 가능한 프로젝트 (이미 선택된 것 제외)
+const availableProjects = computed(() => {
+  const selectedIds = form.value.workItems.map(w => w.projectId)
+  return projectsStore.activeProjects.filter(p => !selectedIds.includes(p.id))
+})
+
+// 프로젝트 ID로 프로젝트 찾기
+const getProjectById = (id: string): Project | undefined => {
+  return projectsStore.getProjectById(id)
+}
+
+// 작업 항목 추가
+const addWorkItem = (projectId: string): void => {
+  form.value.workItems.push({
+    projectId,
+    dailyNote: '',
+  })
+  showProjectSelector.value = false
+}
+
+// 작업 항목 제거
+const removeWorkItem = (index: number): void => {
+  form.value.workItems.splice(index, 1)
+}
+
+// 새 프로젝트 생성
+const handleCreateProject = async (): Promise<void> => {
+  if (!newProject.value.crew || !newProject.value.title) return
+  
+  isCreatingProject.value = true
+  
+  const created = await projectsStore.createProject({
+    crew: newProject.value.crew,
+    jiraLink: newProject.value.jiraLink || undefined,
+    title: newProject.value.title,
+    notionLink: newProject.value.notionLink || undefined,
+    status: 'active',
+  })
+  
+  if (created) {
+    // 생성된 프로젝트를 바로 작업 항목에 추가
+    addWorkItem(created.id)
+    
+    // 폼 초기화
+    newProject.value = {
+      crew: '',
+      jiraLink: '',
+      title: '',
+      notionLink: '',
+    }
+    showNewProjectForm.value = false
+  }
+  
+  isCreatingProject.value = false
+}
 
 const form = ref({
   bullets: props.initialEntry?.bullets && props.initialEntry.bullets.length > 0
@@ -351,10 +638,7 @@ const form = ref({
     mood: typeof p === 'string' ? '' : (p.mood || ''),
   })) || [],
   tomorrow: props.initialEntry?.tomorrow || '',
-})
-
-const bulletCount = computed(() => {
-  return form.value.bullets.filter((b) => b.trim().length > 0).length
+  workItems: props.initialEntry?.workItems?.map(w => ({ ...w })) || [],
 })
 
 const selectedMoodLabel = computed(() => {
@@ -442,18 +726,6 @@ function parseEvents(text: string): string[] {
     .filter((line) => line.length > 0)
 }
 
-function addBullet() {
-  if (bulletCount.value >= 10) {
-    alert('Notes는 최대 10개까지 추가할 수 있습니다.')
-    return
-  }
-  form.value.bullets.push('')
-}
-
-function removeBullet(index: number) {
-  form.value.bullets.splice(index, 1)
-}
-
 function addPerson() {
   form.value.people.push({ name: '', feeling: '', mood: '' })
 }
@@ -482,6 +754,14 @@ function handleSave() {
       mood: (p.mood as MoodValue) || undefined,
     }))
 
+  // 🆕 작업 항목 정리
+  const workItems = form.value.workItems
+    .filter((w) => w.projectId)
+    .map((w) => ({
+      projectId: w.projectId,
+      dailyNote: w.dailyNote?.trim() || undefined,
+    }))
+
   emit('save', {
     bullets: validBullets,
     events: events.length > 0 ? events : undefined,
@@ -491,6 +771,7 @@ function handleSave() {
     },
     people,
     tomorrow: form.value.tomorrow || undefined,
+    workItems: workItems.length > 0 ? workItems : undefined,
   })
 }
 

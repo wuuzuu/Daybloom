@@ -241,12 +241,14 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDarkMode } from '~/composables/useDarkMode'
 import { useEntriesStore } from '~/stores/entries'
 import { useWeeklyStore } from '~/stores/weekly'
+import { useProjectsStore } from '~/stores/projects'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const entriesStore = useEntriesStore()
 const weeklyStore = useWeeklyStore()
+const projectsStore = useProjectsStore()
 
 const { isDark, toggleDarkMode, initDarkMode } = useDarkMode()
 
@@ -331,7 +333,8 @@ const initializeApp = async () => {
   if (user.value?.id) {
     await Promise.all([
       entriesStore.fetchEntries(),
-      weeklyStore.fetchWeeklyNotes()
+      weeklyStore.fetchWeeklyNotes(),
+      projectsStore.fetchProjects()
     ])
   }
   
@@ -359,7 +362,8 @@ onMounted(async () => {
   if (session?.user?.id && !entriesStore.isInitialized) {
     await Promise.all([
       entriesStore.fetchEntries(),
-      weeklyStore.fetchWeeklyNotes()
+      weeklyStore.fetchWeeklyNotes(),
+      projectsStore.fetchProjects()
     ])
   }
   

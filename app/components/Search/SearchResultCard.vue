@@ -41,7 +41,7 @@ import type { Entry } from '~/types'
 import MoodBadge from '~/components/Common/MoodBadge.vue'
 
 interface SearchMatch {
-  type: 'notes' | 'events' | 'people' | 'mood'
+  type: 'notes' | 'events' | 'people' | 'mood' | 'crew'
   text: string
   highlight: string
 }
@@ -65,6 +65,7 @@ function getTypeLabel(type: string): string {
     events: 'Events',
     people: 'People',
     mood: 'Mood',
+    crew: 'Crew',
   }
   return labels[type] || type
 }
@@ -75,6 +76,7 @@ function getTypeClass(type: string): string {
     events: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400',
     people: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
     mood: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400',
+    crew: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400',
   }
   return classes[type] || 'bg-cream-100 dark:bg-warm-600 text-warm-600 dark:text-warm-300'
 }

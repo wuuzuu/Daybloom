@@ -1,90 +1,139 @@
 <template>
   <section class="card">
-    <h2 class="text-lg font-semibold mb-4 text-warm-800 dark:text-cream-100">📝 이번 주 노트</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-warm-800 dark:text-cream-100">📝 이번 주 할 일</h2>
+      <button
+        v-if="hasExistingTodos"
+        @click="$emit('cancel')"
+        class="text-warm-500 dark:text-warm-400 hover:text-warm-700 dark:hover:text-warm-300 text-sm transition-colors"
+      >
+        취소
+      </button>
+    </div>
     
-    <div class="space-y-4">
-      <!-- Highlights -->
-      <div>
-        <label for="highlights" class="block text-sm font-medium mb-2 text-warm-700 dark:text-cream-200">
-          ✨ Highlights (1~3개, 줄바꿈으로 구분)
-        </label>
-        <textarea
-          id="highlights"
-          v-model="highlightsText"
-          rows="4"
-          class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
-          placeholder="이번 주 하이라이트를 입력하세요..."
+    <div class="space-y-3">
+      <!-- Todo List -->
+      <div
+        v-for="(todo, index) in localTodos"
+        :key="todo.id"
+        class="flex items-center gap-2"
+      >
+        <button
+          type="button"
+          @click="toggleTodo(index)"
+          class="flex-shrink-0 w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center"
+          :class="todo.completed 
+            ? 'bg-lavender-500 border-lavender-500 text-white' 
+            : 'border-warm-300 dark:border-warm-500 hover:border-lavender-400'"
+        >
+          <svg v-if="todo.completed" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+        <input
+          v-model="todo.text"
+          type="text"
+          placeholder="할 일을 입력하세요..."
+          class="flex-1 border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
+          :class="{ 'line-through opacity-60': todo.completed }"
         />
+        <button
+          type="button"
+          @click="removeTodo(index)"
+          class="px-3 py-2 text-warm-400 dark:text-warm-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+        >
+          ✕
+        </button>
       </div>
+      
+      <!-- Add Button -->
+      <button
+        type="button"
+        @click="addTodo"
+        class="w-full border-2 border-dashed border-cream-300 dark:border-warm-600 rounded-xl px-4 py-3 text-warm-500 dark:text-warm-400 hover:border-lavender-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-all"
+      >
+        + 할 일 추가
+      </button>
 
-      <!-- Next Experiment -->
-      <div>
-        <label for="nextExperiment" class="block text-sm font-medium mb-2 text-warm-700 dark:text-cream-200">
-          🔬 Next Experiment
-        </label>
-        <textarea
-          id="nextExperiment"
-          v-model="nextExperiment"
-          rows="3"
-          class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 resize-none transition-all"
-          placeholder="다음 주 시도해볼 것을 입력하세요..."
-        />
-      </div>
-
+      <!-- Save Button -->
       <button
         @click="handleSave"
         :disabled="isSaving"
-        class="btn-primary w-full py-4 text-base disabled:opacity-70 disabled:cursor-not-allowed"
+        class="btn-primary w-full py-4 text-base disabled:opacity-70 disabled:cursor-not-allowed mt-4"
       >
         <span v-if="isSaving" class="inline-flex items-center gap-2">
           <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           저장 중...
         </span>
-        <span v-else>✨ 노트 저장</span>
+        <span v-else>✨ 저장하기</span>
       </button>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+import type { WeeklyTodo } from '~/types'
+import { generateUUID } from '~/utils/uuid'
 
 const props = defineProps<{
-  initialHighlights?: string[]
-  initialNextExperiment?: string
+  initialTodos?: WeeklyTodo[]
   isSaving?: boolean
 }>()
 
 const emit = defineEmits<{
-  save: [data: { highlights: string[]; nextExperiment: string }]
+  save: [data: { todos: WeeklyTodo[] }]
+  cancel: []
 }>()
 
-const highlightsText = ref(props.initialHighlights?.join('\n') || '')
-const nextExperiment = ref(props.initialNextExperiment || '')
+const localTodos = ref<WeeklyTodo[]>([])
+
+const hasExistingTodos = computed(() => {
+  return props.initialTodos && props.initialTodos.length > 0
+})
+
+// 초기값 설정
+const initTodos = () => {
+  if (props.initialTodos && props.initialTodos.length > 0) {
+    localTodos.value = props.initialTodos.map(t => ({ ...t }))
+  } else {
+    localTodos.value = [{ id: generateUUID(), text: '', completed: false }]
+  }
+}
+
+initTodos()
 
 watch(
-  () => [props.initialHighlights, props.initialNextExperiment],
-  ([highlights, experiment]) => {
-    highlightsText.value = highlights?.join('\n') || ''
-    nextExperiment.value = experiment || ''
-  }
+  () => props.initialTodos,
+  () => initTodos(),
+  { deep: true }
 )
 
-function parseHighlights(text: string): string[] {
-  return text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .slice(0, 3)
-}
-
-function handleSave() {
-  const highlights = parseHighlights(highlightsText.value)
-  
-  emit('save', {
-    highlights,
-    nextExperiment: nextExperiment.value.trim(),
+const addTodo = () => {
+  localTodos.value.push({
+    id: generateUUID(),
+    text: '',
+    completed: false,
   })
 }
-</script>
 
+const removeTodo = (index: number) => {
+  localTodos.value.splice(index, 1)
+  if (localTodos.value.length === 0) {
+    addTodo()
+  }
+}
+
+const toggleTodo = (index: number) => {
+  const todo = localTodos.value[index]
+  if (todo) {
+    todo.completed = !todo.completed
+  }
+}
+
+const handleSave = () => {
+  // 빈 항목 제외
+  const validTodos = localTodos.value.filter(t => t.text.trim().length > 0)
+  emit('save', { todos: validTodos })
+}
+</script>

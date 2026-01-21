@@ -1,5 +1,45 @@
 <template>
   <div v-if="entry" class="space-y-6">
+    <!-- 🆕 Work Items (Projects) -->
+    <div v-if="entry.workItems && entry.workItems.length > 0" class="card">
+      <h3 class="text-sm font-medium text-warm-500 dark:text-warm-400 mb-3">💼 오늘 작업한 프로젝트</h3>
+      <div class="space-y-3">
+        <div 
+          v-for="workItem in entry.workItems"
+          :key="workItem.projectId"
+          class="bg-cream-50 dark:bg-warm-700 rounded-2xl p-4 border border-cream-200 dark:border-warm-600"
+        >
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-0.5 bg-lavender-100 dark:bg-lavender-900/30 text-lavender-700 dark:text-lavender-300 text-xs font-medium rounded-lg">
+              {{ getProjectCrew(workItem.projectId) }}
+            </span>
+            <a 
+              v-if="getProjectJiraLink(workItem.projectId)"
+              :href="getProjectJiraLink(workItem.projectId)"
+              target="_blank"
+              class="text-xs text-lavender-600 dark:text-lavender-400 font-mono hover:underline"
+            >
+              🎫 {{ extractTicketFromUrl(getProjectJiraLink(workItem.projectId) || '') }}
+            </a>
+          </div>
+          <p class="text-warm-800 dark:text-cream-100 font-medium mb-1">
+            {{ getProjectTitle(workItem.projectId) }}
+          </p>
+          <a 
+            v-if="getProjectNotionLink(workItem.projectId)"
+            :href="getProjectNotionLink(workItem.projectId)"
+            target="_blank"
+            class="text-xs text-lavender-600 dark:text-lavender-400 hover:underline inline-block mb-2"
+          >
+            📎 노션 링크
+          </a>
+          <p v-if="workItem.dailyNote" class="text-warm-600 dark:text-warm-300 text-sm mt-2 bg-white dark:bg-warm-800 rounded-xl p-3">
+            {{ workItem.dailyNote }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Notes -->
     <div v-if="entry.bullets.length > 0" class="card">
       <h3 class="text-sm font-medium text-warm-500 dark:text-warm-400 mb-3">📝 Notes</h3>
@@ -201,6 +241,7 @@ import type { Entry, Person, MoodValue } from '~/types'
 import MoodBadge from '~/components/Common/MoodBadge.vue'
 import { getAvatarUrl } from '~/utils/avatar'
 import { useEntriesStore } from '~/stores/entries'
+import { useProjectsStore } from '~/stores/projects'
 import { formatDate } from '~/utils/date'
 
 const props = defineProps<{
@@ -209,6 +250,36 @@ const props = defineProps<{
 }>()
 
 const entriesStore = useEntriesStore()
+const projectsStore = useProjectsStore()
+
+// 🆕 프로젝트 정보 헬퍼 함수들
+const getProjectCrew = (projectId: string): string => {
+  return projectsStore.getProjectById(projectId)?.crew || '알 수 없음'
+}
+
+const getProjectJiraLink = (projectId: string): string | undefined => {
+  return projectsStore.getProjectById(projectId)?.jiraLink
+}
+
+// URL에서 티켓 번호 추출 (마지막 / 뒤의 텍스트)
+const extractTicketFromUrl = (url: string): string => {
+  if (!url) return ''
+  try {
+    const cleanUrl = url.replace(/\/+$/, '') // 끝의 슬래시 제거
+    const parts = cleanUrl.split('/')
+    return parts[parts.length - 1] || ''
+  } catch {
+    return ''
+  }
+}
+
+const getProjectTitle = (projectId: string): string => {
+  return projectsStore.getProjectById(projectId)?.title || '삭제된 프로젝트'
+}
+
+const getProjectNotionLink = (projectId: string): string | undefined => {
+  return projectsStore.getProjectById(projectId)?.notionLink
+}
 
 // Mood emoji helper
 const getMoodEmoji = (mood: MoodValue): string => {

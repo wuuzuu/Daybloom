@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
-import type { WeeklyNotes } from '~/types'
+import type { WeeklyNotes, WeeklyTodo } from '~/types'
 
 interface DBWeeklyNote {
   id: string
   user_id: string
   week_start: string
+  todos: WeeklyTodo[] | null
   reflection: string | null
   goals: string[] | null
   created_at: string
@@ -36,7 +37,6 @@ export const useWeeklyStore = defineStore('weekly', {
     async fetchWeeklyNotes() {
       const supabase = useSupabaseClient()
       
-      // Supabase auth에서 직접 사용자 정보 가져오기
       const { data: { user } } = await (supabase as any).auth.getUser()
       
       if (!user?.id) {
@@ -58,17 +58,11 @@ export const useWeeklyStore = defineStore('weekly', {
         const weeklyNotesByWeekStart: Record<string, WeeklyNotes> = {}
         
         data.forEach((row: DBWeeklyNote) => {
-          // DB 필드 -> 앱 필드 매핑
-          // reflection (줄바꿈 문자열) -> highlights (배열)
-          // goals (배열) -> nextExperiment (첫번째 요소)
-          const highlights = row.reflection ? row.reflection.split('\n').filter(h => h.trim()) : undefined
-          const nextExperiment = row.goals?.[0] || undefined
-          
           weeklyNotesByWeekStart[row.week_start] = {
-            highlights,
-            nextExperiment,
-            reflection: row.reflection || undefined,
-            goals: row.goals || undefined,
+            todos: row.todos || undefined,
+            // 레거시 필드도 유지
+            highlights: row.reflection ? row.reflection.split('\n').filter(h => h.trim()) : undefined,
+            nextExperiment: row.goals?.[0] || undefined,
           }
         })
         
@@ -85,28 +79,18 @@ export const useWeeklyStore = defineStore('weekly', {
     async setWeeklyNotes(weekStart: string, payload: WeeklyNotes): Promise<boolean> {
       const supabase = useSupabaseClient()
       
-      // Supabase auth에서 직접 사용자 정보 가져오기
       const { data: { user } } = await (supabase as any).auth.getUser()
       
       if (!user?.id) return false
       
       const now = new Date().toISOString()
       
-      // highlights -> reflection (배열을 줄바꿈으로 연결)
-      // nextExperiment -> goals (문자열을 배열로)
-      const reflection = payload.highlights?.join('\n') || payload.reflection || null
-      const goals = payload.nextExperiment 
-        ? [payload.nextExperiment] 
-        : (payload.goals || null)
-      
-      // upsert 사용 (있으면 업데이트, 없으면 삽입)
       const { error } = await (supabase as any)
         .from('weekly_notes')
         .upsert({
           user_id: user.id,
           week_start: weekStart,
-          reflection,
-          goals,
+          todos: payload.todos || null,
           updated_at: now,
         }, {
           onConflict: 'user_id,week_start',
@@ -119,11 +103,49 @@ export const useWeeklyStore = defineStore('weekly', {
       
       // 로컬 상태도 업데이트
       this.weeklyNotesByWeekStart[weekStart] = {
-        highlights: payload.highlights || (reflection ? reflection.split('\n') : undefined),
-        nextExperiment: payload.nextExperiment || (goals?.[0] ?? undefined),
-        reflection: reflection || undefined,
-        goals: goals || undefined,
+        ...this.weeklyNotesByWeekStart[weekStart],
+        todos: payload.todos,
       }
+      return true
+    },
+
+    /**
+     * Todo 토글 (완료/미완료) - 낙관적 업데이트
+     */
+    async toggleTodo(weekStart: string, todoId: string): Promise<boolean> {
+      const notes = this.weeklyNotesByWeekStart[weekStart]
+      if (!notes?.todos) return false
+      
+      // 1. 즉시 로컬 상태 업데이트 (낙관적 업데이트)
+      const updatedTodos = notes.todos.map(t => 
+        t.id === todoId ? { ...t, completed: !t.completed } : t
+      )
+      this.weeklyNotesByWeekStart[weekStart] = { ...notes, todos: updatedTodos }
+      
+      // 2. 백그라운드에서 서버에 저장 (실패해도 UI는 이미 업데이트됨)
+      const supabase = useSupabaseClient()
+      const { data: { user } } = await (supabase as any).auth.getUser()
+      
+      if (!user?.id) return false
+      
+      const { error } = await (supabase as any)
+        .from('weekly_notes')
+        .upsert({
+          user_id: user.id,
+          week_start: weekStart,
+          todos: updatedTodos,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,week_start',
+        })
+      
+      if (error) {
+        console.error('Failed to toggle todo:', error)
+        // 실패시 롤백
+        this.weeklyNotesByWeekStart[weekStart] = notes
+        return false
+      }
+      
       return true
     },
 

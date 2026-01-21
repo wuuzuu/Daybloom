@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useEntriesStore } from '~/stores/entries'
-import type { Mood } from '~/types'
+import type { Mood, WorkItem } from '~/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,18 +86,16 @@ const entryData = computed(() => {
   
   if (entry) {
     // 기존 기록이 있을 때, 쿼리 파라미터가 있으면 해당 값으로 덮어쓰기
-    const mood = queryMood.value 
-      ? { value: queryMood.value as 'great' | 'good' | 'okay' | 'bad' | 'awful', note: entry.mood.note }
-      : entry.mood
-    
-    const bullets = queryText.value 
-      ? [queryText.value, ...entry.bullets.slice(1)]
-      : entry.bullets
+    const moodValue = queryMood.value || entry.mood.value
+    const moodNote = queryText.value ?? entry.mood.note
     
     return {
-      bullets,
+      bullets: entry.bullets,
       events: entry.events,
-      mood,
+      mood: {
+        value: moodValue as 'great' | 'good' | 'okay' | 'bad' | 'awful',
+        note: moodNote,
+      },
       people: entry.people.map((p) => {
         if (typeof p === 'string') {
           return { name: p }
@@ -105,19 +103,21 @@ const entryData = computed(() => {
         return p
       }),
       tomorrow: entry.tomorrow,
+      workItems: entry.workItems,
     }
   }
   
   if (queryMood.value || queryText.value) {
     return {
-      bullets: queryText.value ? [queryText.value] : [],
+      bullets: [],
       events: [],
       mood: {
         value: (queryMood.value || 'okay') as 'great' | 'good' | 'okay' | 'bad' | 'awful',
-        note: '',
+        note: queryText.value || '',
       },
       people: [],
       tomorrow: '',
+      workItems: [],
     }
   }
   
@@ -135,6 +135,7 @@ const handleSave = async (data: {
   mood: Mood
   people: Array<{ name: string; feeling?: string }>
   tomorrow?: string
+  workItems?: WorkItem[] // 🆕
 }): Promise<void> => {
   isSaving.value = true
   try {

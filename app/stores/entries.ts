@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Entry, Person, MoodValue, Mood } from '~/types'
+import type { Entry, Person, MoodValue, Mood, WorkItem } from '~/types'
 
 interface DBEntry {
   id: string
@@ -10,6 +10,7 @@ interface DBEntry {
   mood: { value: MoodValue; note?: string }
   people: Person[]
   tomorrow: string | null
+  work_items: WorkItem[] | null // 🆕
   created_at: string
   updated_at: string
 }
@@ -98,6 +99,7 @@ export const useEntriesStore = defineStore('entries', {
             mood: row.mood as Mood,
             people: row.people || [],
             tomorrow: row.tomorrow || undefined,
+            workItems: row.work_items || undefined, // 🆕
             createdAt: new Date(row.created_at).getTime(),
             updatedAt: new Date(row.updated_at).getTime(),
           }
@@ -134,6 +136,7 @@ export const useEntriesStore = defineStore('entries', {
         mood: entry.mood,
         people: entry.people,
         tomorrow: entry.tomorrow || null,
+        work_items: entry.workItems || null, // 🆕
         updated_at: now,
       }
       
@@ -159,6 +162,7 @@ export const useEntriesStore = defineStore('entries', {
         mood: row.mood as Mood,
         people: row.people || [],
         tomorrow: row.tomorrow || undefined,
+        workItems: row.work_items || undefined, // 🆕
         createdAt: new Date(row.created_at).getTime(),
         updatedAt: new Date(row.updated_at).getTime(),
       }
