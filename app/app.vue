@@ -307,10 +307,18 @@ const handleLogout = () => {
   isProfileOpen.value = false
 }
 
+// 스토어 초기화 (데이터 클리어)
+const clearAllStores = () => {
+  entriesStore.$reset()
+  weeklyStore.$reset()
+  projectsStore.$reset()
+}
+
 // 로그아웃 확인
 const confirmLogout = async () => {
   isLoggingOut.value = true
   try {
+    clearAllStores() // 로그아웃 시 데이터 클리어
     await supabase.auth.signOut()
     showLogoutModal.value = false
     navigateTo('/login')
@@ -325,8 +333,8 @@ const cancelLogout = () => {
 }
 
 // 앱 초기화 및 데이터 로드
-const initializeApp = async () => {
-  if (entriesStore.isInitialized) return
+const initializeApp = async (forceRefresh = false) => {
+  if (entriesStore.isInitialized && !forceRefresh) return
   
   isAppLoading.value = true
   
@@ -345,11 +353,21 @@ const initializeApp = async () => {
 watch(user, async (newUser, oldUser) => {
   if (import.meta.server) return
   
+  // 사용자가 바뀌면 이전 데이터 클리어 후 새로 로드
+  const isUserChanged = oldUser?.id && newUser?.id && oldUser.id !== newUser.id
+  
   if (newUser?.id) {
-    const isNewUser = !oldUser?.id || oldUser.id !== newUser.id
-    if (isNewUser || !entriesStore.isInitialized) {
-      await initializeApp()
+    if (isUserChanged) {
+      clearAllStores() // 다른 사용자로 전환 시 데이터 클리어
     }
+    
+    const shouldFetch = isUserChanged || !entriesStore.isInitialized
+    if (shouldFetch) {
+      await initializeApp(isUserChanged)
+    }
+  } else if (!newUser && oldUser) {
+    // 로그아웃 시 데이터 클리어
+    clearAllStores()
   }
 })
 
