@@ -63,6 +63,7 @@
         :year="currentYear"
         :month="currentMonth"
         :entries="entriesStore.entriesByDate"
+        :projects="projectsStore.projects"
         @prev="goToPreviousMonth"
         @next="goToNextMonth"
         @select="handleDateSelect"
@@ -74,12 +75,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useEntriesStore } from '~/stores/entries'
+import { useProjectsStore } from '~/stores/projects'
 import { getToday, getCalendarDays } from '~/utils/date'
 import dayjs from 'dayjs'
 import MonthCalendar from '~/components/Calendar/MonthCalendar.vue'
 
 const router = useRouter()
 const entriesStore = useEntriesStore()
+const projectsStore = useProjectsStore()
 
 const today = dayjs(getToday())
 const currentYear = ref(today.year())

@@ -63,10 +63,20 @@
           />
         </div>
 
-        <!-- 엔트리 미리보기 -->
-        <div v-if="getEntryForDate(day.date)" class="mt-1">
-          <p class="text-xs text-warm-600 dark:text-cream-300 truncate">
-            {{ getEntryPreview(day.date) }}
+        <!-- 프로젝트명 표시 -->
+        <div v-if="getProjectsForDate(day.date).names.length > 0" class="mt-1 space-y-0.5">
+          <p 
+            v-for="name in getProjectsForDate(day.date).names" 
+            :key="name"
+            class="text-xs text-lavender-600 dark:text-lavender-300 truncate font-medium"
+          >
+            {{ name }}
+          </p>
+          <p 
+            v-if="getProjectsForDate(day.date).extra > 0"
+            class="text-xs text-warm-400 dark:text-warm-500"
+          >
+            +{{ getProjectsForDate(day.date).extra }}
           </p>
         </div>
       </div>
@@ -76,7 +86,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Entry, MoodValue } from '~/types'
+import type { Entry, MoodValue, Project } from '~/types'
 import { getCalendarDays, getMonthName, getToday } from '~/utils/date'
 import dayjs from 'dayjs'
 
@@ -84,6 +94,7 @@ const props = defineProps<{
   year: number
   month: number
   entries: Record<string, Entry>
+  projects?: Project[]
 }>()
 
 defineEmits<{
@@ -107,13 +118,27 @@ function getEntryForDate(date: string): Entry | undefined {
   return props.entries[date]
 }
 
-function getEntryPreview(date: string): string {
+function getProjectsForDate(date: string): { names: string[]; extra: number } {
   const entry = props.entries[date]
-  if (!entry) return ''
-  if (entry.bullets.length > 0) {
-    return entry.bullets[0]
+  if (!entry || !entry.workItems || entry.workItems.length === 0) {
+    return { names: [], extra: 0 }
   }
-  return ''
+  
+  const projectNames = entry.workItems
+    .map(wi => {
+      const project = props.projects?.find(p => p.id === wi.projectId)
+      return project?.crew || project?.title || null
+    })
+    .filter((name): name is string => name !== null)
+  
+  // 중복 제거
+  const uniqueNames = [...new Set(projectNames)]
+  
+  // 최대 2개만 표시, 나머지는 +N으로
+  const displayNames = uniqueNames.slice(0, 2)
+  const extra = uniqueNames.length - 2
+  
+  return { names: displayNames, extra: extra > 0 ? extra : 0 }
 }
 
 function getMoodColor(mood?: MoodValue): string {
