@@ -567,10 +567,9 @@ const extractTicketFromUrl = (url: string): string => {
 // 기존 크루 목록
 const existingCrews = computed(() => projectsStore.uniqueCrews)
 
-// 선택 가능한 프로젝트 (이미 선택된 것 제외)
+// 선택 가능한 프로젝트 (같은 프로젝트도 여러 번 추가 가능)
 const availableProjects = computed(() => {
-  const selectedIds = form.value.workItems.map(w => w.projectId)
-  return projectsStore.activeProjects.filter(p => !selectedIds.includes(p.id))
+  return projectsStore.activeProjects
 })
 
 // 프로젝트 ID로 프로젝트 찾기
