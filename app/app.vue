@@ -255,6 +255,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDarkMode } from '~/composables/useDarkMode'
+import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 import { useEntriesStore } from '~/stores/entries'
 import { useWeeklyStore } from '~/stores/weekly'
 import { useProjectsStore } from '~/stores/projects'
@@ -270,6 +271,9 @@ const { isDark, toggleDarkMode, initDarkMode } = useDarkMode()
 
 const isMobileMenuOpen = ref(false)
 const showLogoutModal = ref(false)
+
+// 모달 열릴 때 배경 스크롤 막기
+useBodyScrollLock(showLogoutModal)
 const isLoggingOut = ref(false)
 const isAppLoading = ref(true) // 앱 전체 로딩 상태 (처음엔 로딩 중)
 const isProfileOpen = ref(false)

@@ -447,6 +447,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { Mood, MoodValue, WorkItem, Project } from '~/types'
 import { useEntriesStore } from '~/stores/entries'
 import { useProjectsStore } from '~/stores/projects'
+import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 import { getAvatarUrl } from '~/utils/avatar'
 
 const entriesStore = useEntriesStore()
@@ -545,6 +546,9 @@ const emit = defineEmits<{
 const showProjectSelector = ref(false)
 const showNewProjectForm = ref(false)
 const isCreatingProject = ref(false)
+
+// 모달 열릴 때 배경 스크롤 막기
+useBodyScrollLock(showNewProjectForm)
 const newProject = ref({
   crew: '',
   jiraLink: '',

@@ -242,6 +242,7 @@ import MoodBadge from '~/components/Common/MoodBadge.vue'
 import { getAvatarUrl } from '~/utils/avatar'
 import { useEntriesStore } from '~/stores/entries'
 import { useProjectsStore } from '~/stores/projects'
+import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 import { formatDate } from '~/utils/date'
 
 const props = defineProps<{
@@ -295,6 +296,10 @@ const getMoodEmoji = (mood: MoodValue): string => {
 
 // 모달에 표시할 선택된 사람
 const selectedPerson = ref<Person | string | null>(null)
+
+// 모달 열릴 때 배경 스크롤 막기
+const isPersonModalOpen = computed(() => selectedPerson.value !== null)
+useBodyScrollLock(isPersonModalOpen)
 
 // 사람 이름 추출 헬퍼
 const getPersonName = (person: Person | string): string => {

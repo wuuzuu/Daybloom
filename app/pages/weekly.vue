@@ -119,6 +119,7 @@ import { ref, computed, watch } from 'vue'
 import { useEntriesStore } from '~/stores/entries'
 import { useWeeklyStore } from '~/stores/weekly'
 import { useProjectsStore } from '~/stores/projects'
+import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 import { getToday, getWeekRange, getPreviousWeek, getNextWeek } from '~/utils/date'
 import { buildWeeklySummary } from '~/utils/summary'
 import type { WeeklySummary, WeeklyTodo } from '~/types'
@@ -132,6 +133,9 @@ const projectsStore = useProjectsStore()
 // AI Summary 상태
 const isGeneratingSummary = ref(false)
 const showAISummaryModal = ref(false)
+
+// 모달 열릴 때 배경 스크롤 막기
+useBodyScrollLock(showAISummaryModal)
 const aiSummaryContent = ref('')
 const aiSummaryError = ref('')
 

@@ -4,6 +4,7 @@ import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 import type { Entry, Person } from '~/types'
 import { getAvatarUrl } from '~/utils/avatar'
+import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 
 const props = defineProps<{
   entries: Entry[]
@@ -14,6 +15,10 @@ let network: Network | null = null
 
 // 선택된 사람
 const selectedPerson = ref<string | null>(null)
+
+// 모달 열릴 때 배경 스크롤 막기
+const isPersonModalOpen = computed(() => selectedPerson.value !== null)
+useBodyScrollLock(isPersonModalOpen)
 
 // 사람 이름 추출 헬퍼
 const getPersonName = (person: Person | string): string => {
