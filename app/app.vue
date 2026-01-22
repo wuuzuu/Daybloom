@@ -101,18 +101,48 @@
           </div>
         </div>
         
-        <!-- Mobile Menu -->
+      </div>
+    </nav>
+    
+    <!-- Mobile Full Screen Menu -->
+    <Teleport to="body">
+      <Transition name="mobile-menu">
         <div
-          v-show="isMobileMenuOpen"
-          class="md:hidden mt-3 pt-3 border-t border-cream-200/50 dark:border-warm-700/50"
+          v-if="isMobileMenuOpen"
+          class="md:hidden fixed inset-0 z-[90] bg-cream-50 dark:bg-warm-900"
         >
-          <div class="flex flex-col gap-2">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-cream-200/50 dark:border-warm-700/50 bg-white/70 dark:bg-warm-800/70 backdrop-blur-md">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🌸</span>
+              <span class="logo-text text-warm-800 dark:text-cream-100">Daybloom</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="toggleDarkMode"
+                class="p-2 rounded-xl bg-cream-100 dark:bg-warm-700 hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors"
+                :aria-label="isDark ? '라이트 모드로 전환' : '다크 모드로 전환'"
+              >
+                <span class="text-lg">{{ isDark ? '☀️' : '🌙' }}</span>
+              </button>
+              <button
+                @click="isMobileMenuOpen = false"
+                class="p-2 rounded-xl bg-cream-100 dark:bg-warm-700 hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors"
+                aria-label="메뉴 닫기"
+              >
+                <span class="text-lg">✕</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Menu Content -->
+          <div class="flex flex-col p-4 gap-2">
             <NuxtLink
               v-for="nav in navItems"
               :key="nav.path"
               :to="nav.path"
               :class="[
-                'px-4 py-2 rounded-xl text-sm font-medium transition-colors',
+                'px-4 py-3 rounded-xl text-base font-medium transition-colors',
                 isActiveRoute(nav.path)
                   ? 'bg-lavender-100 text-lavender-600 dark:bg-lavender-900/30 dark:text-lavender-400'
                   : 'text-warm-600 hover:bg-cream-100 dark:text-warm-300 dark:hover:bg-warm-700'
@@ -123,8 +153,8 @@
             </NuxtLink>
             
             <!-- User Info (Mobile) -->
-            <div v-if="user" class="px-4 py-2 border-t border-cream-200/50 dark:border-warm-700/50 mt-2 pt-2">
-              <div class="flex items-center gap-2 text-sm text-warm-600 dark:text-warm-300 mb-2">
+            <div v-if="user" class="border-t border-cream-200/50 dark:border-warm-700/50 mt-4 pt-4">
+              <div class="flex items-center gap-2 text-sm text-warm-600 dark:text-warm-300 px-4 mb-3">
                 <svg v-if="isGoogleUser" class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -135,14 +165,14 @@
               </div>
               <button
                 @click="handleExportData"
-                class="w-full px-3 py-2 rounded-xl text-sm font-medium text-warm-600 dark:text-warm-300 hover:bg-cream-100 dark:hover:bg-warm-700 transition-colors text-left flex items-center gap-2 mb-1"
+                class="w-full px-4 py-3 rounded-xl text-base font-medium text-warm-600 dark:text-warm-300 hover:bg-cream-100 dark:hover:bg-warm-700 transition-colors text-left flex items-center gap-2 mb-1"
               >
                 <span>📦</span>
                 <span>데이터 내보내기</span>
               </button>
               <button
                 @click="handleLogout"
-                class="w-full px-3 py-2 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left flex items-center gap-2"
+                class="w-full px-4 py-3 rounded-xl text-base font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left flex items-center gap-2"
               >
                 <span>🚪</span>
                 <span>로그아웃</span>
@@ -150,8 +180,8 @@
             </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </Transition>
+    </Teleport>
     
     <main class="pb-20">
       <!-- 앱 로딩 중 -->
@@ -274,6 +304,7 @@ const showLogoutModal = ref(false)
 
 // 모달 열릴 때 배경 스크롤 막기
 useBodyScrollLock(showLogoutModal)
+useBodyScrollLock(isMobileMenuOpen)
 const isLoggingOut = ref(false)
 const isAppLoading = ref(true) // 앱 전체 로딩 상태 (처음엔 로딩 중)
 const isProfileOpen = ref(false)

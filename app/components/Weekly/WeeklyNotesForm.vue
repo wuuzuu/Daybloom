@@ -31,11 +31,13 @@
           </svg>
         </button>
         <input
+          :ref="(el) => setTodoInputRef(el, index)"
           v-model="todo.text"
           type="text"
           placeholder="할 일을 입력하세요..."
           class="flex-1 border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-lavender-300 dark:focus:ring-lavender-500 placeholder-warm-400 dark:placeholder-warm-500 transition-all"
           :class="{ 'line-through opacity-60': todo.completed }"
+          @keydown.enter="handleSave"
         />
         <button
           type="button"
@@ -72,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import type { WeeklyTodo } from '~/types'
 import { generateUUID } from '~/utils/uuid'
 
@@ -87,6 +89,15 @@ const emit = defineEmits<{
 }>()
 
 const localTodos = ref<WeeklyTodo[]>([])
+const todoInputRefs = ref<Map<number, HTMLInputElement>>(new Map())
+
+const setTodoInputRef = (el: HTMLInputElement | null, index: number) => {
+  if (el) {
+    todoInputRefs.value.set(index, el)
+  } else {
+    todoInputRefs.value.delete(index)
+  }
+}
 
 const hasExistingTodos = computed(() => {
   return props.initialTodos && props.initialTodos.length > 0
@@ -109,12 +120,20 @@ watch(
   { deep: true }
 )
 
-const addTodo = () => {
+const addTodo = async () => {
+  const newIndex = localTodos.value.length
   localTodos.value.push({
     id: generateUUID(),
     text: '',
     completed: false,
   })
+  
+  // 새로 추가된 input에 포커스
+  await nextTick()
+  const newInput = todoInputRefs.value.get(newIndex)
+  if (newInput) {
+    newInput.focus()
+  }
 }
 
 const removeTodo = (index: number) => {

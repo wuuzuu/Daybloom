@@ -367,3 +367,20 @@
   opacity: 0;
   transform: translateY(-0.5rem);
 }
+
+/* Mobile menu full screen animations */
+.mobile-menu-enter-active {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-menu-leave-active {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.mobile-menu-enter-from {
+  transform: translateX(100%);
+}
+
+.mobile-menu-leave-to {
+  transform: translateX(100%);
+}

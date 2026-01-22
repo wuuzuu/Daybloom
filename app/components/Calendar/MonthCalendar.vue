@@ -58,7 +58,7 @@
           <!-- 기분 표시 -->
           <span
             v-if="getEntryForDate(day.date)"
-            class="w-3 h-3 rounded-full shadow-sm"
+            class="w-2 h-2 md:w-3 md:h-3 rounded-full shadow-sm"
             :class="getMoodColor(getEntryForDate(day.date)?.mood.value)"
           />
         </div>
