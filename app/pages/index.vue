@@ -12,7 +12,7 @@
     <section class="card card-hover mb-6">
       <div class="text-center">
         <p class="text-warm-500 dark:text-warm-400 text-sm mb-4">지금 기분을 선택해주세요</p>
-        <div class="flex justify-center gap-4 md:gap-6">
+        <div class="flex justify-center gap-2 sm:gap-4 md:gap-6">
           <button
             v-for="mood in moods"
             :key="mood.value"

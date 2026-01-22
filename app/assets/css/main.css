@@ -75,22 +75,42 @@
 
 /* Mood emoji styles */
 .mood-emoji {
-  font-size: 2.25rem;
+  font-size: 1.75rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
+@media (min-width: 640px) {
+  .mood-emoji {
+    font-size: 2.25rem;
+  }
+}
+
 .mood-emoji:hover {
-  transform: scale(1.25);
+  transform: scale(1.15);
 }
 
 .mood-emoji:active {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .mood-emoji.selected {
-  transform: scale(1.25);
+  transform: scale(1.15);
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+@media (min-width: 640px) {
+  .mood-emoji:hover {
+    transform: scale(1.25);
+  }
+  
+  .mood-emoji:active {
+    transform: scale(1.1);
+  }
+  
+  .mood-emoji.selected {
+    transform: scale(1.25);
+  }
 }
 
 /* Custom scrollbar */
