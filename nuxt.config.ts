@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   
+  // Runtime Config
+  runtimeConfig: {
+    geminiApiKey: process.env.GEMINI_API_KEY,
+  },
+  
   // Supabase 설정
   supabase: {
     redirectOptions: {

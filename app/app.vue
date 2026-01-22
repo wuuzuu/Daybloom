@@ -69,6 +69,15 @@
                     </div>
                   </div>
                   
+                  <!-- Export Data Button -->
+                  <button
+                    @click="handleExportData"
+                    class="w-full px-4 py-3 text-left text-sm text-warm-600 dark:text-warm-300 hover:bg-cream-50 dark:hover:bg-warm-700 transition-colors flex items-center gap-2"
+                  >
+                    <span>📦</span>
+                    <span>데이터 내보내기</span>
+                  </button>
+                  
                   <!-- Logout Button -->
                   <button
                     @click="handleLogout"
@@ -124,6 +133,13 @@
                 </svg>
                 <span class="truncate">{{ user.email }}</span>
               </div>
+              <button
+                @click="handleExportData"
+                class="w-full px-3 py-2 rounded-xl text-sm font-medium text-warm-600 dark:text-warm-300 hover:bg-cream-100 dark:hover:bg-warm-700 transition-colors text-left flex items-center gap-2 mb-1"
+              >
+                <span>📦</span>
+                <span>데이터 내보내기</span>
+              </button>
               <button
                 @click="handleLogout"
                 class="w-full px-3 py-2 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left flex items-center gap-2"
@@ -305,6 +321,31 @@ const handleLogout = () => {
   showLogoutModal.value = true
   isMobileMenuOpen.value = false
   isProfileOpen.value = false
+}
+
+// 데이터 내보내기
+const handleExportData = () => {
+  isProfileOpen.value = false
+  
+  const exportData = {
+    exportedAt: new Date().toISOString(),
+    version: '1.0',
+    entries: Object.values(entriesStore.entriesByDate),
+    weeklyNotes: weeklyStore.weeklyNotesByWeekStart,
+    projects: projectsStore.projects,
+  }
+  
+  const jsonString = JSON.stringify(exportData, null, 2)
+  const blob = new Blob([jsonString], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `daybloom-backup-${new Date().toISOString().split('T')[0]}.json`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 // 스토어 초기화 (데이터 클리어)
