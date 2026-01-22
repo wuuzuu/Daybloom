@@ -349,48 +349,82 @@ const initializeApp = async (forceRefresh = false) => {
   isAppLoading.value = false
 }
 
-// 로그인 상태 변경 감지 (클라이언트에서만)
-watch(user, async (newUser, oldUser) => {
-  if (import.meta.server) return
-  
-  // 새로 로그인한 경우 (로그인 없음 -> 로그인 있음)
-  const isNewLogin = !oldUser?.id && newUser?.id
-  // 사용자가 바뀐 경우 (다른 계정으로 전환)
-  const isUserChanged = oldUser?.id && newUser?.id && oldUser.id !== newUser.id
-  
-  if (newUser?.id) {
-    if (isUserChanged) {
-      clearAllStores() // 다른 사용자로 전환 시 데이터 클리어
-    }
-    
-    // 새 로그인이거나 사용자 전환이거나 아직 초기화 안된 경우 데이터 로드
-    if (isNewLogin || isUserChanged || !entriesStore.isInitialized) {
-      await initializeApp(true) // 항상 새로 로드
-    }
-  } else if (!newUser && oldUser) {
-    // 로그아웃 시 데이터 클리어
-    clearAllStores()
-  }
-})
+// 마지막으로 초기화한 사용자 ID 추적
+const lastInitializedUserId = ref<string | null>(null)
 
-onMounted(async () => {
-  initDarkMode()
-  document.addEventListener('click', handleClickOutside)
+// 데이터 로드 함수
+const loadUserData = async (userId: string) => {
+  if (lastInitializedUserId.value === userId && entriesStore.isInitialized) {
+    isAppLoading.value = false
+    return // 이미 이 사용자로 초기화됨
+  }
   
-  const { data: { session } } = await (supabase as any).auth.getSession()
+  lastInitializedUserId.value = userId
+  isAppLoading.value = true
   
-  if (session?.user?.id && !entriesStore.isInitialized) {
+  try {
     await Promise.all([
       entriesStore.fetchEntries(),
       weeklyStore.fetchWeeklyNotes(),
       projectsStore.fetchProjects()
     ])
+  } catch (error) {
+    console.error('Failed to load user data:', error)
+  } finally {
+    isAppLoading.value = false
   }
+}
+
+// Auth state change 구독 해제 함수
+let authSubscription: { unsubscribe: () => void } | null = null
+
+onMounted(async () => {
+  initDarkMode()
+  document.addEventListener('click', handleClickOutside)
   
-  isAppLoading.value = false
+  try {
+    // 먼저 초기 세션 확인 (페이지 새로고침 시)
+    const { data: { session } } = await (supabase as any).auth.getSession()
+    
+    if (session?.user?.id) {
+      await loadUserData(session.user.id)
+    } else {
+      isAppLoading.value = false
+    }
+    
+    // 이후 Auth 상태 변화 리스너 등록 (로그인/로그아웃 이벤트만 처리)
+    const { data: { subscription } } = (supabase as any).auth.onAuthStateChange(
+      async (event: string, session: any) => {
+        // INITIAL_SESSION은 이미 위에서 처리했으므로 스킵
+        if (event === 'INITIAL_SESSION') {
+          return
+        }
+        
+        if (event === 'SIGNED_IN' && session?.user?.id) {
+          // 새 로그인 이벤트 (다른 탭에서 로그인 등)
+          if (lastInitializedUserId.value !== session.user.id) {
+            await loadUserData(session.user.id)
+          }
+        } else if (event === 'SIGNED_OUT') {
+          // 로그아웃 이벤트
+          lastInitializedUserId.value = null
+          clearAllStores()
+          isAppLoading.value = false
+        }
+      }
+    )
+    authSubscription = subscription
+  } catch (error) {
+    console.error('Failed to initialize app:', error)
+    isAppLoading.value = false
+  }
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  // Auth 리스너 해제
+  if (authSubscription) {
+    authSubscription.unsubscribe()
+  }
 })
 </script>
