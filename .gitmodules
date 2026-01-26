@@ -1,0 +1,3 @@
+[submodule "shared/utils"]
+	path = shared/utils
+	url = https://github.com/wuuzuu/daybloom-utils.git
