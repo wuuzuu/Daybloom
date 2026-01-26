@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import NetworkGraph from '~/components/People/NetworkGraph.vue'
 import MoodHeatmap from '~/components/People/MoodHeatmap.vue'
 import { useEntriesStore } from '~/stores/entries'
-import { getAvatarUrl } from '~/utils/avatar'
+import { getAvatarUrl } from '~/shared/utils/avatar'
 import type { Person } from '~/types'
 
 const entriesStore = useEntriesStore()

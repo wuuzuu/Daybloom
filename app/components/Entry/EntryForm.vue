@@ -448,7 +448,7 @@ import type { Mood, MoodValue, WorkItem, Project } from '~/types'
 import { useEntriesStore } from '~/stores/entries'
 import { useProjectsStore } from '~/stores/projects'
 import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
-import { getAvatarUrl } from '~/utils/avatar'
+import { getAvatarUrl } from '~/shared/utils/avatar'
 
 const entriesStore = useEntriesStore()
 const projectsStore = useProjectsStore()

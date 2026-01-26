@@ -239,11 +239,11 @@
 import { ref, computed } from 'vue'
 import type { Entry, Person, MoodValue } from '~/types'
 import MoodBadge from '~/components/Common/MoodBadge.vue'
-import { getAvatarUrl } from '~/utils/avatar'
+import { getAvatarUrl } from '~/shared/utils/avatar'
 import { useEntriesStore } from '~/stores/entries'
 import { useProjectsStore } from '~/stores/projects'
 import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
-import { formatDate } from '~/utils/date'
+import { formatDate } from '~/shared/utils/date'
 
 const props = defineProps<{
   entry: Entry | undefined

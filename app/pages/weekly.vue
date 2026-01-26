@@ -120,7 +120,7 @@ import { useEntriesStore } from '~/stores/entries'
 import { useWeeklyStore } from '~/stores/weekly'
 import { useProjectsStore } from '~/stores/projects'
 import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
-import { getToday, getWeekRange, getPreviousWeek, getNextWeek } from '~/utils/date'
+import { getToday, getWeekRange, getPreviousWeek, getNextWeek } from '~/shared/utils/date'
 import { buildWeeklySummary } from '~/utils/summary'
 import type { WeeklySummary, WeeklyTodo } from '~/types'
 

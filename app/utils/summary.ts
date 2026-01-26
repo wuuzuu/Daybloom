@@ -1,5 +1,5 @@
 import type { Entry, WeeklySummary, MoodValue } from '~/types'
-import { getDatesInRange } from './date'
+import { getDatesInRange } from '~/shared/utils/date'
 
 /**
  * 주어진 엔트리들로부터 주간 요약을 생성

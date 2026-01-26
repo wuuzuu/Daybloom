@@ -87,7 +87,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Entry, MoodValue, Project } from '~/types'
-import { getCalendarDays, getMonthName, getToday } from '~/utils/date'
+import { getCalendarDays, getMonthName, getToday } from '~/shared/utils/date'
 import dayjs from 'dayjs'
 
 const props = defineProps<{

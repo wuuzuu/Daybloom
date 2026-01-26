@@ -1,0 +1,16 @@
+{
+  "name": "daybloom-utils",
+  "version": "1.0.0",
+  "description": "Shared utility functions for Daybloom",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": ["utils", "daybloom"],
+  "author": "wuuzuu",
+  "license": "MIT",
+  "dependencies": {
+    "dayjs": "^1.11.10"
+  }
+}

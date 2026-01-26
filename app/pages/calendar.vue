@@ -76,7 +76,7 @@
 import { ref, computed } from 'vue'
 import { useEntriesStore } from '~/stores/entries'
 import { useProjectsStore } from '~/stores/projects'
-import { getToday, getCalendarDays } from '~/utils/date'
+import { getToday, getCalendarDays } from '~/shared/utils/date'
 import dayjs from 'dayjs'
 import MonthCalendar from '~/components/Calendar/MonthCalendar.vue'
 

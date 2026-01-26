@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
 import type { WeeklyTodo } from '~/types'
-import { generateUUID } from '~/utils/uuid'
+import { generateUUID } from '~/shared/utils/uuid'
 
 const props = defineProps<{
   initialTodos?: WeeklyTodo[]

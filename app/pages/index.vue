@@ -164,7 +164,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useEntriesStore } from '~/stores/entries'
-import { getToday } from '~/utils/date'
+import { getToday } from '~/shared/utils/date'
 import type { MoodValue } from '~/types'
 
 const router = useRouter()

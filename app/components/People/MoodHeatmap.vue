@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Entry, Person, MoodValue } from '~/types'
-import { getAvatarUrl } from '~/utils/avatar'
+import { getAvatarUrl } from '~/shared/utils/avatar'
 
 const props = defineProps<{
   entries: Entry[]

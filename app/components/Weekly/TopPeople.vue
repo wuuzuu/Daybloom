@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { getAvatarUrl } from '~/utils/avatar'
+import { getAvatarUrl } from '~/shared/utils/avatar'
 
 defineProps<{
   topPeople: Array<{ name: string; count: number }>

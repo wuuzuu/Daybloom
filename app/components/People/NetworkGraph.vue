@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 import type { Entry, Person } from '~/types'
-import { getAvatarUrl } from '~/utils/avatar'
+import { getAvatarUrl } from '~/shared/utils/avatar'
 import { useBodyScrollLock } from '~/composables/useBodyScrollLock'
 
 const props = defineProps<{
