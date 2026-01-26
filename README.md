@@ -13,10 +13,17 @@
 - **Charts**: Chart.js + vue-chartjs
 - **Network Graph**: vis-network
 - **Date**: dayjs
+- **Shared Utils**: Git Submodule ([daybloom-utils](https://github.com/wuuzuu/daybloom-utils))
 
 ## 시작하기
 
 ```bash
+# 서브모듈 포함해서 클론
+git clone --recurse-submodules https://github.com/wuuzuu/Daybloom.git
+
+# 또는 기존 레포에서 서브모듈 초기화
+git submodule update --init --recursive
+
 # 의존성 설치
 npm install
 
@@ -88,11 +95,15 @@ app/
 │           ├── search.post.ts   # AI 스마트 검색 API
 │           └── summary.post.ts  # AI 주간 요약 API
 │
+├── shared/
+│   └── utils/               # 📦 Git Submodule (daybloom-utils)
+│       ├── avatar.ts        # 아바타 생성
+│       ├── date.ts          # 날짜 유틸
+│       ├── uuid.ts          # UUID 생성
+│       └── index.ts         # 배럴 파일
+│
 ├── utils/
-│   ├── avatar.ts            # 아바타 생성
-│   ├── date.ts              # 날짜 유틸
-│   ├── summary.ts           # 요약 생성
-│   └── uuid.ts              # UUID 생성
+│   └── summary.ts           # 요약 생성 (앱 전용)
 │
 └── types/
     └── index.ts             # TypeScript 타입 정의
