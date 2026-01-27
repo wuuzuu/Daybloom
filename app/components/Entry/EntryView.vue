@@ -33,7 +33,7 @@
           >
             📎 노션 링크
           </a>
-          <p v-if="workItem.dailyNote" class="text-warm-600 dark:text-warm-300 text-sm mt-2 bg-white dark:bg-warm-800 rounded-xl p-3">
+          <p v-if="workItem.dailyNote" class="text-warm-600 dark:text-warm-300 text-sm mt-2 bg-white dark:bg-warm-800 rounded-xl p-3 whitespace-pre-wrap">
             {{ workItem.dailyNote }}
           </p>
         </div>

@@ -42,13 +42,24 @@
                 📎 노션 링크
               </a>
             </div>
-            <button
-              type="button"
-              @click="removeWorkItem(index)"
-              class="p-1 text-warm-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-            >
-              ✕
-            </button>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                @click="openEditProject(getProjectById(workItem.projectId)!)"
+                class="p-1 text-warm-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-colors"
+                title="프로젝트 수정"
+              >
+                ✏️
+              </button>
+              <button
+                type="button"
+                @click="removeWorkItem(index)"
+                class="p-1 text-warm-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                title="목록에서 제거"
+              >
+                ✕
+              </button>
+            </div>
           </div>
           
           <!-- 오늘 작업 내용 -->
