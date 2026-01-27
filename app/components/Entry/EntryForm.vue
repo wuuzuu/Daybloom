@@ -91,23 +91,46 @@
             <p class="px-4 py-2 text-xs text-warm-500 dark:text-warm-400 bg-cream-50 dark:bg-warm-700">
               진행 중인 프로젝트
             </p>
-            <button
+            <div
               v-for="project in availableProjects"
               :key="project.id"
-              type="button"
-              @click="addWorkItem(project.id)"
-              class="w-full px-4 py-3 text-left hover:bg-cream-50 dark:hover:bg-warm-700 transition-colors"
+              class="flex items-center hover:bg-cream-50 dark:hover:bg-warm-700 transition-colors"
             >
-              <div class="flex items-center gap-2 mb-1">
-                <span class="px-2 py-0.5 bg-lavender-100 dark:bg-lavender-900/30 text-lavender-700 dark:text-lavender-300 text-xs font-medium rounded-lg">
-                  {{ project.crew }}
-                </span>
-                <span v-if="project.jiraLink" class="text-xs text-warm-500 dark:text-warm-400 font-mono">
-                  🎫 {{ extractTicketFromUrl(project.jiraLink) }}
-                </span>
+              <button
+                type="button"
+                @click="addWorkItem(project.id)"
+                class="flex-1 px-4 py-3 text-left"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="px-2 py-0.5 bg-lavender-100 dark:bg-lavender-900/30 text-lavender-700 dark:text-lavender-300 text-xs font-medium rounded-lg">
+                    {{ project.crew }}
+                  </span>
+                  <span v-if="project.jiraLink" class="text-xs text-warm-500 dark:text-warm-400 font-mono">
+                    🎫 {{ extractTicketFromUrl(project.jiraLink) }}
+                  </span>
+                </div>
+                <p class="text-warm-800 dark:text-cream-100 text-sm">{{ project.title }}</p>
+              </button>
+              <!-- 수정/삭제 버튼 -->
+              <div class="flex items-center gap-1 pr-2">
+                <button
+                  type="button"
+                  @click.stop="openEditProject(project)"
+                  class="p-2 text-warm-400 hover:text-lavender-600 dark:hover:text-lavender-400 transition-colors"
+                  title="수정"
+                >
+                  ✏️
+                </button>
+                <button
+                  type="button"
+                  @click.stop="confirmDeleteProject(project)"
+                  class="p-2 text-warm-400 hover:text-red-500 transition-colors"
+                  title="삭제"
+                >
+                  🗑️
+                </button>
               </div>
-              <p class="text-warm-800 dark:text-cream-100 text-sm">{{ project.title }}</p>
-            </button>
+            </div>
           </div>
           
           <div v-else class="px-4 py-6 text-center text-warm-500 dark:text-warm-400">
@@ -226,6 +249,146 @@
                     추가 중...
                   </span>
                   <span v-else>추가</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 🆕 프로젝트 수정 모달 -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div 
+          v-if="editingProject" 
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          @click.self="editingProject = null"
+        >
+          <div class="absolute inset-0 bg-warm-900/50 dark:bg-black/60 backdrop-blur-sm" />
+          
+          <div class="relative bg-white dark:bg-warm-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-modal-in">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-warm-800 dark:text-cream-100 mb-4">
+                ✏️ 프로젝트 수정
+              </h3>
+              
+              <div class="space-y-4">
+                <!-- 크루명 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    크루명 *
+                  </label>
+                  <input
+                    v-model="editProjectForm.crew"
+                    type="text"
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300"
+                  />
+                </div>
+                
+                <!-- 작업 제목 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    작업 제목 *
+                  </label>
+                  <input
+                    v-model="editProjectForm.title"
+                    type="text"
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300"
+                  />
+                </div>
+                
+                <!-- 지라 링크 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    지라 티켓 URL (선택)
+                  </label>
+                  <input
+                    v-model="editProjectForm.jiraLink"
+                    type="url"
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300"
+                  />
+                </div>
+                
+                <!-- 노션 링크 -->
+                <div>
+                  <label class="block text-sm font-medium text-warm-700 dark:text-cream-200 mb-2">
+                    노션 링크 (선택)
+                  </label>
+                  <input
+                    v-model="editProjectForm.notionLink"
+                    type="url"
+                    class="w-full border border-warm-300 dark:border-warm-500 bg-cream-50 dark:bg-warm-700 text-warm-800 dark:text-cream-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-300"
+                  />
+                </div>
+              </div>
+              
+              <div class="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  @click="editingProject = null"
+                  class="flex-1 px-4 py-3 bg-cream-100 dark:bg-warm-700 text-warm-700 dark:text-cream-200 rounded-2xl font-medium hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  @click="handleUpdateProject"
+                  :disabled="!editProjectForm.crew || !editProjectForm.title || isUpdatingProject"
+                  class="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span v-if="isUpdatingProject" class="inline-flex items-center gap-2">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    저장 중...
+                  </span>
+                  <span v-else>저장</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- 🆕 프로젝트 삭제 확인 모달 -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div 
+          v-if="deletingProject" 
+          class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          @click.self="deletingProject = null"
+        >
+          <div class="absolute inset-0 bg-warm-900/50 dark:bg-black/60 backdrop-blur-sm" />
+          
+          <div class="relative bg-white dark:bg-warm-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-modal-in">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-warm-800 dark:text-cream-100 mb-2">
+                🗑️ 프로젝트 삭제
+              </h3>
+              <p class="text-warm-600 dark:text-warm-300 mb-4">
+                <strong>{{ deletingProject.title }}</strong>을(를) 삭제할까요?
+              </p>
+              <p class="text-sm text-red-500 mb-4">이 작업은 되돌릴 수 없어요.</p>
+              
+              <div class="flex gap-3">
+                <button
+                  type="button"
+                  @click="deletingProject = null"
+                  class="flex-1 px-4 py-3 bg-cream-100 dark:bg-warm-700 text-warm-700 dark:text-cream-200 rounded-2xl font-medium hover:bg-cream-200 dark:hover:bg-warm-600 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  @click="handleDeleteProject"
+                  :disabled="isDeletingProject"
+                  class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-medium disabled:opacity-50 transition-colors"
+                >
+                  <span v-if="isDeletingProject" class="inline-flex items-center gap-2">
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    삭제 중...
+                  </span>
+                  <span v-else>삭제</span>
                 </button>
               </div>
             </div>
@@ -547,14 +710,79 @@ const showProjectSelector = ref(false)
 const showNewProjectForm = ref(false)
 const isCreatingProject = ref(false)
 
+// 🆕 프로젝트 수정/삭제 관련 상태
+const editingProject = ref<Project | null>(null)
+const deletingProject = ref<Project | null>(null)
+const isUpdatingProject = ref(false)
+const isDeletingProject = ref(false)
+
+const editProjectForm = ref({
+  crew: '',
+  title: '',
+  jiraLink: '',
+  notionLink: '',
+})
+
 // 모달 열릴 때 배경 스크롤 막기
-useBodyScrollLock(showNewProjectForm)
+const isAnyModalOpen = computed(() => showNewProjectForm.value || !!editingProject.value || !!deletingProject.value)
+useBodyScrollLock(isAnyModalOpen)
+
 const newProject = ref({
   crew: '',
   jiraLink: '',
   title: '',
   notionLink: '',
 })
+
+// 프로젝트 수정 모달 열기
+const openEditProject = (project: Project): void => {
+  editingProject.value = project
+  editProjectForm.value = {
+    crew: project.crew,
+    title: project.title,
+    jiraLink: project.jiraLink || '',
+    notionLink: project.notionLink || '',
+  }
+  showProjectSelector.value = false
+}
+
+// 프로젝트 삭제 확인
+const confirmDeleteProject = (project: Project): void => {
+  deletingProject.value = project
+  showProjectSelector.value = false
+}
+
+// 프로젝트 수정 저장
+const handleUpdateProject = async (): Promise<void> => {
+  if (!editingProject.value) return
+  if (!editProjectForm.value.crew.trim() || !editProjectForm.value.title.trim()) return
+  
+  isUpdatingProject.value = true
+  try {
+    await projectsStore.updateProject(editingProject.value.id, {
+      crew: editProjectForm.value.crew.trim(),
+      title: editProjectForm.value.title.trim(),
+      jiraLink: editProjectForm.value.jiraLink.trim() || undefined,
+      notionLink: editProjectForm.value.notionLink.trim() || undefined,
+    })
+    editingProject.value = null
+  } finally {
+    isUpdatingProject.value = false
+  }
+}
+
+// 프로젝트 삭제 실행
+const handleDeleteProject = async (): Promise<void> => {
+  if (!deletingProject.value) return
+  
+  isDeletingProject.value = true
+  try {
+    await projectsStore.deleteProject(deletingProject.value.id)
+    deletingProject.value = null
+  } finally {
+    isDeletingProject.value = false
+  }
+}
 
 // URL에서 티켓 번호 추출 (마지막 / 뒤의 텍스트)
 const extractTicketFromUrl = (url: string): string => {
